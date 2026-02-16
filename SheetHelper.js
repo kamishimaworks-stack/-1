@@ -19,6 +19,15 @@ const SheetHelper = (() => {
     return _getOrCreateSheet(SFA_CONFIG.SHEETS.MAIN);
   }
 
+  /**
+   * 日付値を安全にISO文字列に変換（無効な値の場合は空文字を返す）
+   */
+  function _safeToISO(val) {
+    if (val === null || val === undefined || val === '') return '';
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+
   function _getOrCreateSheet(sheetName) {
     const ss = getSpreadsheet();
     let sheet = ss.getSheetByName(sheetName);
@@ -55,7 +64,7 @@ const SheetHelper = (() => {
 
     return data.map((row, index) => ({
       rowIndex:       index + 2,
-      registeredDate: row[COL.REGISTERED_DATE] ? new Date(row[COL.REGISTERED_DATE]).toISOString() : '',
+      registeredDate: _safeToISO(row[COL.REGISTERED_DATE]),
       companyName:    row[COL.COMPANY_NAME] || '',
       fullName:       row[COL.FULL_NAME] || '',
       title:          row[COL.TITLE] || '',
@@ -63,7 +72,7 @@ const SheetHelper = (() => {
       phone:          row[COL.PHONE] || '',
       address:        row[COL.ADDRESS] || '',
       website:        row[COL.WEBSITE] || '',
-      lastContact:    row[COL.LAST_CONTACT] ? new Date(row[COL.LAST_CONTACT]).toISOString() : '',
+      lastContact:    _safeToISO(row[COL.LAST_CONTACT]),
       staffName:      row[COL.STAFF_NAME] || '',
       imageUrl:       row[COL.IMAGE_URL] || '',
       xUrl:           row[COL.X_URL] || '',
@@ -89,11 +98,11 @@ const SheetHelper = (() => {
     const data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
     return data.map((row, i) => ({
       rowIndex:     i + 2,
-      generatedDate: row[0] ? new Date(row[0]).toISOString() : '',
+      generatedDate: _safeToISO(row[0]),
       companyName:  row[1] || '',
       fullName:     row[2] || '',
       email:        row[3] || '',
-      lastContact:  row[4] ? new Date(row[4]).toISOString() : '',
+      lastContact:  _safeToISO(row[4]),
       dormantDays:  row[5] || 0,
       news:         row[6] || '',
       subject:      row[7] || '',
@@ -117,7 +126,7 @@ const SheetHelper = (() => {
       reason:        row[3] || '',
       priority:      row[4] || '',
       estimatedUrl:  row[5] || '',
-      generatedDate: row[6] ? new Date(row[6]).toISOString() : '',
+      generatedDate: _safeToISO(row[6]),
     }));
   }
 
@@ -130,7 +139,7 @@ const SheetHelper = (() => {
     const data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
     return data.map((row, i) => ({
       rowIndex:  i + 2,
-      datetime:  row[0] ? new Date(row[0]).toISOString() : '',
+      datetime:  _safeToISO(row[0]),
       type:      row[1] || '',
       company:   row[2] || '',
       name:      row[3] || '',

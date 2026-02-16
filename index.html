@@ -55,27 +55,27 @@ body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;col
 <aside id="sidebar" class="bg-slate-900 flex flex-col shrink-0 h-full">
   <div class="flex items-center gap-2 px-4 py-5 border-b border-slate-700">
     <span class="text-2xl">&#x1F4C7;</span>
-    <span class="logo-text text-white font-bold text-sm tracking-wide">SFA Manager</span>
+    <span class="logo-text text-white font-bold text-sm tracking-wide">SFA 管理</span>
   </div>
   <nav class="flex-1 p-3 space-y-1" id="nav">
     <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
-      <span>&#x1F4CA;</span><span class="nav-label">Dashboard</span>
+      <span>&#x1F4CA;</span><span class="nav-label">ダッシュボード</span>
     </div>
     <div class="nav-item" data-page="customers" onclick="navigate('customers')">
-      <span>&#x1F465;</span><span class="nav-label">Contacts</span>
+      <span>&#x1F465;</span><span class="nav-label">顧客一覧</span>
     </div>
     <div class="nav-item" data-page="scan" onclick="navigate('scan')">
-      <span>&#x1F4F7;</span><span class="nav-label">Card Scan</span>
+      <span>&#x1F4F7;</span><span class="nav-label">名刺スキャン</span>
     </div>
     <div class="nav-item" data-page="dormant" onclick="navigate('dormant')">
-      <span>&#x1F4E7;</span><span class="nav-label">Dormant</span>
+      <span>&#x1F4E7;</span><span class="nav-label">休眠顧客</span>
     </div>
     <div class="nav-item" data-page="targets" onclick="navigate('targets')">
-      <span>&#x1F3AF;</span><span class="nav-label">Targets</span>
+      <span>&#x1F3AF;</span><span class="nav-label">ターゲット</span>
     </div>
   </nav>
   <div class="p-4 border-t border-slate-700">
-    <button onclick="runSetup()" class="w-full text-xs text-slate-400 hover:text-white py-2 rounded hover:bg-slate-800 transition">Setup</button>
+    <button onclick="runSetup()" class="w-full text-xs text-slate-400 hover:text-white py-2 rounded hover:bg-slate-800 transition">セットアップ</button>
   </div>
 </aside>
 
@@ -84,48 +84,48 @@ body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;col
 
 <!-- ===== PAGE: Dashboard ===== -->
 <div id="page-dashboard" class="page p-6 space-y-6">
-  <h1 class="text-xl font-bold text-slate-800">Dashboard</h1>
+  <h1 class="text-xl font-bold text-slate-800">ダッシュボード</h1>
   <!-- KPI Row -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="kpi-row">
-    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">Total Contacts</p><p id="kpi-total" class="text-3xl font-bold text-slate-800">-</p></div>
-    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">Active</p><p id="kpi-active" class="text-3xl font-bold text-green-600">-</p></div>
-    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">Dormant (180d+)</p><p id="kpi-dormant" class="text-3xl font-bold text-orange-500">-</p></div>
-    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">No Contact</p><p id="kpi-nocontact" class="text-3xl font-bold text-slate-400">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">顧客総数</p><p id="kpi-total" class="text-3xl font-bold text-slate-800">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">アクティブ</p><p id="kpi-active" class="text-3xl font-bold text-green-600">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">休眠（180日以上）</p><p id="kpi-dormant" class="text-3xl font-bold text-orange-500">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">未接触</p><p id="kpi-nocontact" class="text-3xl font-bold text-slate-400">-</p></div>
   </div>
   <!-- Charts -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Monthly Registrations</h3><div id="chart-monthly" class="space-y-1"></div></div>
-    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Industry Breakdown</h3><div id="chart-industry" class="space-y-1"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">月別登録数</h3><div id="chart-monthly" class="space-y-1"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">業種別内訳</h3><div id="chart-industry" class="space-y-1"></div></div>
   </div>
   <!-- Staff + Alerts -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Staff Ranking</h3><div id="staff-ranking"></div></div>
-    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Recent Alerts</h3><div id="recent-alerts" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">担当者ランキング</h3><div id="staff-ranking"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">最近のアラート</h3><div id="recent-alerts" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div></div>
   </div>
 </div>
 
 <!-- ===== PAGE: Customers ===== -->
 <div id="page-customers" class="page hidden p-6 space-y-4">
   <div class="flex flex-wrap items-center gap-3">
-    <h1 class="text-xl font-bold text-slate-800 mr-auto">Contacts</h1>
-    <input id="search-input" type="text" placeholder="Search name / company..." class="border rounded-lg px-3 py-2 text-sm w-64 focus:ring-2 focus:ring-blue-400" oninput="filterCustomers()">
-    <select id="filter-industry" class="border rounded-lg px-3 py-2 text-sm" onchange="filterCustomers()"><option value="">All Industries</option></select>
-    <button onclick="loadCustomers()" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700">Reload</button>
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">顧客一覧</h1>
+    <input id="search-input" type="text" placeholder="氏名・会社名で検索..." class="border rounded-lg px-3 py-2 text-sm w-64 focus:ring-2 focus:ring-blue-400" oninput="filterCustomers()">
+    <select id="filter-industry" class="border rounded-lg px-3 py-2 text-sm" onchange="filterCustomers()"><option value="">全業種</option></select>
+    <button onclick="loadCustomers()" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700">再読み込み</button>
   </div>
   <div class="bg-white rounded-xl shadow overflow-x-auto">
     <div id="customers-loading" class="py-10"><div class="spinner"></div></div>
     <table class="data-table" id="customers-table" style="display:none">
       <thead>
         <tr>
-          <th class="cursor-pointer" onclick="sortTable('companyName')">Company</th>
-          <th class="cursor-pointer" onclick="sortTable('fullName')">Name</th>
-          <th class="cursor-pointer" onclick="sortTable('title')">Title</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th class="cursor-pointer" onclick="sortTable('industry')">Industry</th>
-          <th class="cursor-pointer" onclick="sortTable('lastContact')">Last Contact</th>
-          <th>Staff</th>
-          <th style="width:100px">Actions</th>
+          <th class="cursor-pointer" onclick="sortTable('companyName')">会社名</th>
+          <th class="cursor-pointer" onclick="sortTable('fullName')">氏名</th>
+          <th class="cursor-pointer" onclick="sortTable('title')">役職</th>
+          <th>メール</th>
+          <th>電話</th>
+          <th class="cursor-pointer" onclick="sortTable('industry')">業種</th>
+          <th class="cursor-pointer" onclick="sortTable('lastContact')">最終接触日</th>
+          <th>担当者</th>
+          <th style="width:100px">操作</th>
         </tr>
       </thead>
       <tbody id="customers-tbody"></tbody>
@@ -137,29 +137,29 @@ body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;col
 <!-- ===== PAGE: Scan ===== -->
 <div id="page-scan" class="page hidden p-6">
   <div class="max-w-lg mx-auto space-y-5">
-    <h1 class="text-xl font-bold text-slate-800">Card Scan</h1>
+    <h1 class="text-xl font-bold text-slate-800">名刺スキャン</h1>
     <!-- Staff Name -->
     <div>
-      <label class="block text-xs font-medium text-slate-500 mb-1">Your Name</label>
-      <input type="text" id="staffNameInput" placeholder="e.g. Tanaka Taro" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
+      <label class="block text-xs font-medium text-slate-500 mb-1">担当者名</label>
+      <input type="text" id="staffNameInput" placeholder="例：田中 太郎" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
     </div>
     <!-- Mode -->
     <div class="grid grid-cols-2 gap-2">
-      <button id="btn-merge" onclick="setMode('merge')" class="p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm">Merge (front + back)</button>
-      <button id="btn-multi" onclick="setMode('multi')" class="p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50">Batch (multiple cards)</button>
+      <button id="btn-merge" onclick="setMode('merge')" class="p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm">表裏統合</button>
+      <button id="btn-multi" onclick="setMode('multi')" class="p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50">複数枚一括</button>
     </div>
     <!-- Upload -->
     <div class="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:bg-slate-50 transition relative">
       <input type="file" id="fileInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelect(this)">
-      <div id="upload-placeholder"><span class="text-4xl block mb-2">&#x1F4F7;</span><p class="text-slate-500 text-sm">Tap to take photo or select images</p></div>
+      <div id="upload-placeholder"><span class="text-4xl block mb-2">&#x1F4F7;</span><p class="text-slate-500 text-sm">タップしてカメラを起動<br>または画像を選択</p></div>
       <div id="preview-area" class="hidden grid grid-cols-3 gap-3 pointer-events-none relative z-10"></div>
     </div>
     <!-- Run -->
-    <button id="submitBtn" onclick="uploadAndAnalyze()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow hover:bg-blue-700 disabled:bg-slate-400 transition">Scan & Analyze</button>
+    <button id="submitBtn" onclick="uploadAndAnalyze()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow hover:bg-blue-700 disabled:bg-slate-400 transition">スキャン＆解析</button>
     <!-- Status -->
     <div id="scan-status" class="hidden text-center p-4 rounded-lg bg-slate-100">
       <div class="spinner"></div>
-      <p id="scan-status-text" class="text-slate-600 text-sm mt-2">Processing...</p>
+      <p id="scan-status-text" class="text-slate-600 text-sm mt-2">処理中...</p>
     </div>
     <!-- Result -->
     <div id="scan-result" class="hidden space-y-3"></div>
@@ -169,17 +169,17 @@ body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;col
 <!-- ===== PAGE: Dormant ===== -->
 <div id="page-dormant" class="page hidden p-6 space-y-4">
   <div class="flex items-center gap-3 flex-wrap">
-    <h1 class="text-xl font-bold text-slate-800 mr-auto">Dormant Customers</h1>
-    <button onclick="runDormantCheck()" id="btn-run-dormant" class="bg-orange-500 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-slate-300">Generate Mail Drafts</button>
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">休眠顧客</h1>
+    <button onclick="runDormantCheck()" id="btn-run-dormant" class="bg-orange-500 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-slate-300">メール下書き生成</button>
   </div>
   <div class="flex gap-2">
-    <div class="sub-tab active" onclick="switchDormantTab('list')">Dormant List</div>
-    <div class="sub-tab" onclick="switchDormantTab('drafts')">Mail Drafts</div>
+    <div class="sub-tab active" onclick="switchDormantTab('list')">休眠リスト</div>
+    <div class="sub-tab" onclick="switchDormantTab('drafts')">メール下書き</div>
   </div>
   <div id="dormant-panel-list" class="bg-white rounded-xl shadow overflow-x-auto">
     <div id="dormant-loading" class="py-10"><div class="spinner"></div></div>
     <table class="data-table" id="dormant-table" style="display:none">
-      <thead><tr><th>Company</th><th>Name</th><th>Email</th><th>Last Contact</th><th>Dormant Days</th><th>Industry</th><th>Staff</th></tr></thead>
+      <thead><tr><th>会社名</th><th>氏名</th><th>メール</th><th>最終接触日</th><th>休眠日数</th><th>業種</th><th>担当者</th></tr></thead>
       <tbody id="dormant-tbody"></tbody>
     </table>
   </div>
@@ -192,13 +192,13 @@ body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;col
 <!-- ===== PAGE: Targets ===== -->
 <div id="page-targets" class="page hidden p-6 space-y-4">
   <div class="flex items-center gap-3 flex-wrap">
-    <h1 class="text-xl font-bold text-slate-800 mr-auto">Similar Companies & Targets</h1>
-    <button onclick="runBatchSimilar()" id="btn-run-similar" class="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-slate-300">Run Batch Analysis</button>
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">類似企業・ターゲット</h1>
+    <button onclick="runBatchSimilar()" id="btn-run-similar" class="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-slate-300">一括分析実行</button>
   </div>
   <div class="bg-white rounded-xl shadow overflow-x-auto">
     <div id="targets-loading" class="py-10"><div class="spinner"></div></div>
     <table class="data-table" id="targets-table" style="display:none">
-      <thead><tr><th>Base Company</th><th>Similar Company</th><th>Industry</th><th>Reason</th><th>Priority</th><th>URL</th><th>Date</th></tr></thead>
+      <thead><tr><th>基準企業</th><th>類似企業</th><th>業種</th><th>類似理由</th><th>優先度</th><th>URL</th><th>日付</th></tr></thead>
       <tbody id="targets-tbody"></tbody>
     </table>
   </div>
@@ -272,7 +272,7 @@ function renderDashboard(s) {
   ic.innerHTML = s.industries.length ? s.industries.map(i => {
     const pct = Math.round(i.count / maxI * 100);
     return '<div class="flex items-center gap-2"><span class="text-xs text-slate-500 w-24 shrink-0 truncate">' + esc(i.name) + '</span><div class="flex-1 bg-slate-100 rounded h-5"><div class="chart-bar bg-indigo-500" style="width:' + pct + '%"></div></div><span class="text-xs font-semibold w-6 text-right">' + i.count + '</span></div>';
-  }).join('') : '<p class="text-xs text-slate-400">No data yet</p>';
+  }).join('') : '<p class="text-xs text-slate-400">データがありません</p>';
   // Staff ranking
   const sr = document.getElementById('staff-ranking');
   sr.innerHTML = s.staffRanking.length ? '<table class="data-table"><tbody>' + s.staffRanking.map((st, i) => '<tr><td class="font-semibold">' + (i+1) + '. ' + esc(st.name) + '</td><td class="text-right">' + st.count + '</td></tr>').join('') + '</tbody></table>' : '<p class="text-xs text-slate-400">No data yet</p>';
@@ -280,7 +280,7 @@ function renderDashboard(s) {
 
 function renderAlerts(logs) {
   const el = document.getElementById('recent-alerts');
-  if (!logs || !logs.length) { el.innerHTML = '<p class="text-slate-400">No alerts</p>'; return; }
+  if (!logs || !logs.length) { el.innerHTML = '<p class="text-slate-400">アラートはありません</p>'; return; }
   el.innerHTML = logs.slice(0, 10).map(l => '<div class="p-2 bg-yellow-50 rounded border-l-2 border-yellow-400"><span class="font-semibold">' + esc(l.type) + '</span> ' + esc(l.company) + ' ' + esc(l.name) + '<br><span class="text-slate-400">' + fmtDate(l.datetime) + '</span></div>').join('');
 }
 
@@ -296,13 +296,13 @@ function loadCustomers() {
     filterCustomers();
     document.getElementById('customers-loading').style.display = 'none';
     document.getElementById('customers-table').style.display = '';
-  }).withFailureHandler(e => { alert('Load failed: ' + e.message); }).api_getAllCustomers();
+  }).withFailureHandler(e => { alert('読み込みに失敗しました: ' + e.message); }).api_getAllCustomers();
 }
 
 function buildIndustryFilter(data) {
   const sel = document.getElementById('filter-industry');
   const industries = [...new Set(data.map(c => c.industry).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">All Industries</option>' + industries.map(i => '<option>' + esc(i) + '</option>').join('');
+  sel.innerHTML = '<option value="">全業種</option>' + industries.map(i => '<option>' + esc(i) + '</option>').join('');
 }
 
 function filterCustomers() {
@@ -335,8 +335,8 @@ function doSort() {
 
 function renderCustomerTable() {
   const tbody = document.getElementById('customers-tbody');
-  document.getElementById('customers-count').textContent = filteredCustomers.length + ' / ' + allCustomers.length + ' contacts';
-  if (!filteredCustomers.length) { tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400">No results</td></tr>'; return; }
+  document.getElementById('customers-count').textContent = filteredCustomers.length + ' / ' + allCustomers.length + ' 件';
+  if (!filteredCustomers.length) { tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400">該当なし</td></tr>'; return; }
   tbody.innerHTML = filteredCustomers.map((c, i) => {
     const dc = daysSince(c.lastContact);
     const dcBadge = dc === null ? '<span class="badge badge-gray">N/A</span>' : dc >= 180 ? '<span class="badge badge-red">' + dc + 'd</span>' : dc >= 90 ? '<span class="badge badge-yellow">' + dc + 'd</span>' : '<span class="badge badge-green">' + dc + 'd</span>';
@@ -349,7 +349,7 @@ function renderCustomerTable() {
       '<td><span class="badge badge-blue">' + esc(c.industry) + '</span></td>' +
       '<td>' + fmtDate(c.lastContact) + ' ' + dcBadge + '</td>' +
       '<td>' + esc(c.staffName) + '</td>' +
-      '<td><button class="text-blue-600 hover:underline text-xs mr-2" onclick="openDetail(' + i + ')">Detail</button><button class="text-red-500 hover:underline text-xs" onclick="confirmDelete(' + c.rowIndex + ')">Delete</button></td>' +
+      '<td><button class="text-blue-600 hover:underline text-xs mr-2" onclick="openDetail(' + i + ')">詳細</button><button class="text-red-500 hover:underline text-xs" onclick="confirmDelete(' + c.rowIndex + ')">削除</button></td>' +
       '</tr>';
   }).join('');
 }
@@ -358,40 +358,40 @@ function renderCustomerTable() {
 function openDetail(idx) {
   const c = filteredCustomers[idx];
   if (!c) return;
-  document.getElementById('modal-company').textContent = c.companyName || 'Unknown';
+  document.getElementById('modal-company').textContent = c.companyName || '不明';
   document.getElementById('modal-name-title').textContent = (c.fullName || '') + (c.title ? ' / ' + c.title : '');
   const body = document.getElementById('modal-body');
   body.innerHTML =
     '<div class="grid grid-cols-2 gap-4 text-sm">' +
-      field('Email', c.email, 'mailto:' + c.email) +
-      field('Phone', c.phone, 'tel:' + c.phone) +
-      field('Address', c.address) +
-      field('Website', c.website, c.website) +
-      field('Industry', c.industry) +
-      field('Staff', c.staffName) +
-      field('Registered', fmtDate(c.registeredDate)) +
-      field('Last Contact', fmtDate(c.lastContact)) +
+      field('メール', c.email, 'mailto:' + c.email) +
+      field('電話', c.phone, 'tel:' + c.phone) +
+      field('住所', c.address) +
+      field('Webサイト', c.website, c.website) +
+      field('業種', c.industry) +
+      field('担当者', c.staffName) +
+      field('登録日', fmtDate(c.registeredDate)) +
+      field('最終接触日', fmtDate(c.lastContact)) +
     '</div>' +
     /* SNS */
-    '<div class="mt-4"><p class="text-xs font-semibold text-slate-500 mb-2">SNS Links</p><div class="sns-row flex gap-2">' +
+    '<div class="mt-4"><p class="text-xs font-semibold text-slate-500 mb-2">SNSリンク</p><div class="sns-row flex gap-2">' +
       snsLink('X', c.xUrl, '#000', '#fff') +
       snsLink('Fb', c.facebookUrl, '#1877f2', '#fff') +
       snsLink('Ig', c.instagramUrl, '#e1306c', '#fff') +
       snsLink('Yt', c.youtubeUrl, '#ff0000', '#fff') +
       snsLink('Tk', c.tiktokUrl, '#000', '#69c9d0') +
-      (c.companySite ? '<a href="' + esc(c.companySite) + '" target="_blank" class="text-xs text-blue-600 hover:underline ml-2 self-center">Company Site</a>' : '') +
+      (c.companySite ? '<a href="' + esc(c.companySite) + '" target="_blank" class="text-xs text-blue-600 hover:underline ml-2 self-center">企業サイト</a>' : '') +
     '</div></div>' +
     /* Trends */
-    (c.trends ? '<div class="mt-4 bg-indigo-50 rounded-lg p-4"><p class="text-xs font-semibold text-indigo-700 mb-2">Industry Trends</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.trends) + '</p></div>' : '') +
+    (c.trends ? '<div class="mt-4 bg-indigo-50 rounded-lg p-4"><p class="text-xs font-semibold text-indigo-700 mb-2">業界トレンド</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.trends) + '</p></div>' : '') +
     /* Challenges */
-    (c.challenges ? '<div class="bg-orange-50 rounded-lg p-4"><p class="text-xs font-semibold text-orange-700 mb-2">Estimated Challenges</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.challenges) + '</p></div>' : '') +
+    (c.challenges ? '<div class="bg-orange-50 rounded-lg p-4"><p class="text-xs font-semibold text-orange-700 mb-2">想定課題</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.challenges) + '</p></div>' : '') +
     /* Similar */
-    (c.similar ? '<div class="bg-green-50 rounded-lg p-4"><p class="text-xs font-semibold text-green-700 mb-2">Similar Companies</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.similar) + '</p></div>' : '') +
+    (c.similar ? '<div class="bg-green-50 rounded-lg p-4"><p class="text-xs font-semibold text-green-700 mb-2">類似企業</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.similar) + '</p></div>' : '') +
     /* Dup alert */
-    (c.dupAlert ? '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded"><p class="text-xs font-bold text-yellow-800">Duplicate Alert</p><p class="text-xs text-yellow-700">' + esc(c.dupAlert) + '</p></div>' : '') +
+    (c.dupAlert ? '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded"><p class="text-xs font-bold text-yellow-800">重複アラート</p><p class="text-xs text-yellow-700">' + esc(c.dupAlert) + '</p></div>' : '') +
     /* Edit button */
-    '<div class="flex gap-2 mt-4"><button onclick="startInlineEdit(' + idx + ')" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">Edit Contact</button>' +
-    '<button onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">Close</button></div>';
+    '<div class="flex gap-2 mt-4"><button onclick="startInlineEdit(' + idx + ')" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">編集</button>' +
+    '<button onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">閉じる</button></div>';
   document.getElementById('detail-modal').classList.add('open');
 }
 
@@ -401,15 +401,15 @@ function startInlineEdit(idx) {
   const body = document.getElementById('modal-body');
   body.innerHTML =
     '<form onsubmit="saveEdit(event,' + c.rowIndex + ')" class="space-y-3">' +
-    editField('Company', 'edit-company', c.companyName) +
-    editField('Name', 'edit-name', c.fullName) +
-    editField('Title', 'edit-title', c.title) +
-    editField('Email', 'edit-email', c.email) +
-    editField('Phone', 'edit-phone', c.phone) +
-    editField('Address', 'edit-address', c.address) +
-    editField('Website', 'edit-website', c.website) +
-    editField('Staff', 'edit-staff', c.staffName) +
-    '<div class="flex gap-2"><button type="submit" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">Save</button><button type="button" onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">Cancel</button></div>' +
+    editField('会社名', 'edit-company', c.companyName) +
+    editField('氏名', 'edit-name', c.fullName) +
+    editField('役職', 'edit-title', c.title) +
+    editField('メール', 'edit-email', c.email) +
+    editField('電話', 'edit-phone', c.phone) +
+    editField('住所', 'edit-address', c.address) +
+    editField('Webサイト', 'edit-website', c.website) +
+    editField('担当者', 'edit-staff', c.staffName) +
+    '<div class="flex gap-2"><button type="submit" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">保存</button><button type="button" onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">キャンセル</button></div>' +
     '</form>';
 }
 
@@ -425,11 +425,11 @@ function saveEdit(e, rowIndex) {
     website:     document.getElementById('edit-website').value,
     staffName:   document.getElementById('edit-staff').value,
   };
-  google.script.run.withSuccessHandler(() => { closeModal(); loadCustomers(); }).withFailureHandler(err => alert('Save failed: ' + err.message)).api_updateCustomer(rowIndex, updates);
+  google.script.run.withSuccessHandler(() => { closeModal(); loadCustomers(); }).withFailureHandler(err => alert('保存に失敗しました: ' + err.message)).api_updateCustomer(rowIndex, updates);
 }
 
 function confirmDelete(rowIndex) {
-  if (!confirm('Delete this contact? This cannot be undone.')) return;
+  if (!confirm('この顧客を削除しますか？この操作は取り消せません。')) return;
   google.script.run.withSuccessHandler(() => loadCustomers()).withFailureHandler(err => alert(err.message)).api_deleteCustomer(rowIndex);
 }
 
@@ -466,13 +466,13 @@ function updatePreview() {
 }
 
 async function uploadAndAnalyze() {
-  if (!selectedFiles.length) { alert('Select images first'); return; }
-  if (currentMode === 'merge' && selectedFiles.length !== 2 && !confirm('Merge mode expects 2 images (got ' + selectedFiles.length + '). Continue?')) return;
+  if (!selectedFiles.length) { alert('画像を選択してください'); return; }
+  if (currentMode === 'merge' && selectedFiles.length !== 2 && !confirm('表裏統合モードでは2枚の画像が必要です（現在 ' + selectedFiles.length + ' 枚）。続行しますか？')) return;
   document.getElementById('submitBtn').disabled = true;
-  showScanStatus('Compressing images...');
+  showScanStatus('画像を圧縮中...');
   try {
     const imgs = await Promise.all(selectedFiles.map(processFile));
-    showScanStatus('AI is analyzing...');
+    showScanStatus('AIが解析中...');
     google.script.run.withSuccessHandler(onScanSuccess).withFailureHandler(onScanFail).analyzeFromWeb({ mode: currentMode, images: imgs, staffName: document.getElementById('staffNameInput').value.trim() });
   } catch (e) { onScanFail(e); }
 }
@@ -500,7 +500,7 @@ function onScanSuccess(res) {
   hideScanStatus();
   const el = document.getElementById('scan-result');
   el.classList.remove('hidden');
-  el.innerHTML = '<p class="text-green-600 font-semibold text-sm">Saved ' + res.count + ' contact(s) to spreadsheet</p>' +
+  el.innerHTML = '<p class="text-green-600 font-semibold text-sm">' + res.count + ' 件をスプレッドシートに保存しました</p>' +
     res.data.map(d => '<div class="bg-white rounded-lg border p-4 space-y-2">' +
       '<p class="font-bold">' + esc(d.companyName) + '</p>' +
       '<p class="text-sm text-slate-600">' + esc(d.fullName) + (d.email ? ' / ' + esc(d.email) : '') + '</p>' +
@@ -512,7 +512,7 @@ function onScanSuccess(res) {
   allCustomers = [];
 }
 
-function onScanFail(e) { document.getElementById('submitBtn').disabled = false; hideScanStatus(); alert('Error: ' + (e.message || e)); }
+function onScanFail(e) { document.getElementById('submitBtn').disabled = false; hideScanStatus(); alert('エラー: ' + (e.message || e)); }
 
 /* ==========================================
    4. DORMANT
@@ -538,7 +538,7 @@ function loadDormantList() {
     const tbody = document.getElementById('dormant-tbody');
     tbody.innerHTML = rows.length ? rows.map(c =>
       '<tr><td class="font-semibold">' + esc(c.companyName) + '</td><td>' + esc(c.fullName) + '</td><td>' + esc(c.email) + '</td><td>' + fmtDate(c.lastContact) + '</td><td><span class="badge badge-red">' + c.dormantDays + 'd</span></td><td>' + esc(c.industry) + '</td><td>' + esc(c.staffName) + '</td></tr>'
-    ).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">No dormant customers found</td></tr>';
+    ).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">休眠顧客は見つかりませんでした</td></tr>';
     document.getElementById('dormant-loading').style.display = 'none';
     document.getElementById('dormant-table').style.display = '';
   }).api_getAllCustomers();
@@ -551,18 +551,18 @@ function loadDormantDrafts() {
     const el = document.getElementById('drafts-list');
     el.innerHTML = data.length ? data.map(d =>
       '<div class="bg-white rounded-lg border p-4 space-y-2">' +
-        '<div class="flex justify-between items-start"><div><p class="font-semibold text-sm">' + esc(d.companyName) + ' - ' + esc(d.fullName) + '</p><p class="text-xs text-slate-400">' + fmtDate(d.generatedDate) + ' | ' + d.dormantDays + ' days dormant</p></div><span class="badge ' + (d.status==='sent' ? 'badge-green' : 'badge-yellow') + '">' + esc(d.status) + '</span></div>' +
-        '<p class="text-xs font-semibold text-slate-700">Subject: ' + esc(d.subject) + '</p>' +
+        '<div class="flex justify-between items-start"><div><p class="font-semibold text-sm">' + esc(d.companyName) + ' - ' + esc(d.fullName) + '</p><p class="text-xs text-slate-400">' + fmtDate(d.generatedDate) + ' | 休眠 ' + d.dormantDays + ' 日</p></div><span class="badge ' + (d.status==='sent' ? 'badge-green' : 'badge-yellow') + '">' + (d.status==='sent' ? '送信済み' : d.status==='下書き' ? '下書き' : esc(d.status)) + '</span></div>' +
+        '<p class="text-xs font-semibold text-slate-700">件名: ' + esc(d.subject) + '</p>' +
         '<p class="text-xs text-slate-600 whitespace-pre-wrap bg-slate-50 p-3 rounded">' + esc(d.body) + '</p>' +
       '</div>'
-    ).join('') : '<p class="text-center text-slate-400 py-8">No drafts yet. Click "Generate Mail Drafts" to create.</p>';
+    ).join('') : '<p class="text-center text-slate-400 py-8">下書きはまだありません。「メール下書き生成」をクリックして作成してください。</p>';
   }).api_getDormantDrafts();
 }
 
 function runDormantCheck() {
   const btn = document.getElementById('btn-run-dormant');
-  btn.disabled = true; btn.textContent = 'Processing...';
-  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = 'Generate Mail Drafts'; alert('Processed ' + r.processed + ' customers'); loadDormant(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = 'Generate Mail Drafts'; alert(e.message); }).api_runDormantCheck();
+  btn.disabled = true; btn.textContent = '処理中...';
+  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = 'メール下書き生成'; alert(r.processed + ' 件の顧客を処理しました'); loadDormant(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = 'メール下書き生成'; alert(e.message); }).api_runDormantCheck();
 }
 
 /* ==========================================
@@ -575,8 +575,8 @@ function loadTargets() {
     const tbody = document.getElementById('targets-tbody');
     tbody.innerHTML = data.length ? data.map(c => {
       const pCls = c.priority === 'High' || c.priority === '\u9AD8' ? 'badge-red' : c.priority === 'Medium' || c.priority === '\u4E2D' ? 'badge-yellow' : 'badge-gray';
-      return '<tr><td class="font-semibold">' + esc(c.baseCompany) + '</td><td>' + esc(c.similarName) + '</td><td><span class="badge badge-blue">' + esc(c.industry) + '</span></td><td class="text-xs">' + esc(c.reason) + '</td><td><span class="badge ' + pCls + '">' + esc(c.priority) + '</span></td><td>' + (c.estimatedUrl ? '<a href="' + esc(c.estimatedUrl) + '" target="_blank" class="text-blue-500 hover:underline text-xs">Visit</a>' : '-') + '</td><td class="text-xs">' + fmtDate(c.generatedDate) + '</td></tr>';
-    }).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">No target data. Click "Run Batch Analysis".</td></tr>';
+      return '<tr><td class="font-semibold">' + esc(c.baseCompany) + '</td><td>' + esc(c.similarName) + '</td><td><span class="badge badge-blue">' + esc(c.industry) + '</span></td><td class="text-xs">' + esc(c.reason) + '</td><td><span class="badge ' + pCls + '">' + esc(c.priority) + '</span></td><td>' + (c.estimatedUrl ? '<a href="' + esc(c.estimatedUrl) + '" target="_blank" class="text-blue-500 hover:underline text-xs">開く</a>' : '-') + '</td><td class="text-xs">' + fmtDate(c.generatedDate) + '</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">ターゲットデータがありません。「一括分析実行」をクリックしてください。</td></tr>';
     document.getElementById('targets-loading').style.display = 'none';
     document.getElementById('targets-table').style.display = '';
   }).api_getSimilarCompanies();
@@ -584,16 +584,16 @@ function loadTargets() {
 
 function runBatchSimilar() {
   const btn = document.getElementById('btn-run-similar');
-  btn.disabled = true; btn.textContent = 'Analyzing...';
-  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = 'Run Batch Analysis'; alert('Processed ' + r.processed + '/' + r.total); loadTargets(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = 'Run Batch Analysis'; alert(e.message); }).api_runBatchSimilar();
+  btn.disabled = true; btn.textContent = '分析中...';
+  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = '一括分析実行'; alert(r.processed + '/' + r.total + ' 件を処理しました'); loadTargets(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = '一括分析実行'; alert(e.message); }).api_runBatchSimilar();
 }
 
 /* ==========================================
    SETUP
    ========================================== */
 function runSetup() {
-  if (!confirm('Run initial setup? This will create sheets and headers.')) return;
-  google.script.run.withSuccessHandler(() => alert('Setup complete!')).withFailureHandler(e => alert(e.message)).setupSFA();
+  if (!confirm('初期セットアップを実行しますか？シートとヘッダーが作成されます。')) return;
+  google.script.run.withSuccessHandler(() => alert('セットアップが完了しました')).withFailureHandler(e => alert(e.message)).setupSFA();
 }
 
 /* ==========================================
