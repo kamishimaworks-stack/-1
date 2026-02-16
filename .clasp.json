@@ -1,26 +1,4 @@
 {
   "scriptId": "1Kh_H3KnD9dzdAwdeK2ias4UtFQxYCWJ7Ug2u7FK-HGmjy0pSc24Vkyxp",
-  "rootDir": "",
-  "scriptExtensions": [
-    ".js",
-    ".gs"
-  ],
-  "htmlExtensions": [
-    ".html"
-  ],
-  "jsonExtensions": [
-    ".json"
-  ],
-  "filePushOrder": [
-    "Config.js",
-    "GeminiService.js",
-    "SheetHelper.js",
-    "SnsResearch.js",
-    "IndustryAnalysis.js",
-    "DuplicateCheck.js",
-    "DormantRevival.js",
-    "SimilarCompany.js",
-    "コード.js"
-  ],
-  "skipSubdirectories": false
+  "rootDir": "./"
 }

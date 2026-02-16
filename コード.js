@@ -263,7 +263,7 @@ function setupSFA() {
 
   console.log('=== SFA セットアップ完了 ===');
   console.log('次のステップ:');
-  console.log('1. Config.js の ENV セクションに API キーとフォルダIDを設定');
+  console.log('1. スクリプトプロパティ「Gemini_API」に API キーを設定し、Config.js の ENV セクションにフォルダIDを設定');
   console.log('2. 日次トリガーを設定: setupDailyTrigger() を実行');
 }
 

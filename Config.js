@@ -3,7 +3,7 @@
  *  Config.js - SFA 全体設定
  * ============================================================
  *  全モジュールが参照する一元的な設定オブジェクト。
- *  デプロイ前に ENV セクションを必ず書き換えてください。
+ *  デプロイ前にスクリプトプロパティ「Gemini_API」と ENV セクションを設定してください。
  * ============================================================
  */
 
@@ -14,7 +14,7 @@ const SFA_CONFIG = {
   // ────────────────────────────
   ENV: {
     FOLDER_ID: '1mDptHj7xmXw89pwBQI71EXU2UnKBRL5l',   // Google Drive 保存先フォルダID
-    API_KEY:   'AIzaSyC1BgtDMwt5WfK5iGm9nYSVYBvLzam_SK4',   // Gemini API Key
+    API_KEY:   PropertiesService.getScriptProperties().getProperty('Gemini_API') || '',   // スクリプトプロパティ「Gemini_API」から取得
 
     // Google Custom Search API (機能2で使用 / 任意)
     // ※ 未設定の場合は Gemini の知識のみで回答します
@@ -33,7 +33,7 @@ const SFA_CONFIG = {
   //  Gemini モデル設定
   // ────────────────────────────
   GEMINI: {
-    MODEL:        'gemini-2.0-flash',
+    MODEL:        'gemini-3-flash-preview',
     API_BASE:     'https://generativelanguage.googleapis.com/v1beta/models/',
     TEMPERATURE:  0.3,     // SFA分析はやや創造的に
     MAX_RETRIES:  3,
