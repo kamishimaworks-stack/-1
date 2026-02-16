@@ -14,133 +14,205 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+      .sfa-card {
+        transition: all 0.3s ease;
+      }
+      .sfa-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .fade-in {
+        animation: fadeIn 0.4s ease-in;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .tab-active {
+        border-bottom: 3px solid #2563eb;
+        color: #2563eb;
+        font-weight: 700;
+      }
     </style>
   </head>
   <body class="bg-gray-50 min-h-screen p-4 flex flex-col items-center">
 
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden">
-      <!-- ヘッダー -->
-      <div class="bg-blue-600 p-4 text-center">
-        <h1 class="text-white text-xl font-bold">名刺AI解析スキャナー</h1>
-        <p class="text-blue-100 text-sm">Gemini 3.0 Flash</p>
+    <div class="max-w-lg w-full">
+
+      <!-- ===== ヘッダー ===== -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-t-xl p-5 text-center shadow-lg">
+        <h1 class="text-white text-xl font-bold tracking-wide">名刺AI解析 + SFA</h1>
+        <p class="text-blue-100 text-xs mt-1">Gemini 2.0 Flash / Sales Force Automation</p>
       </div>
 
-      <div class="p-6 space-y-6">
-        
-        <!-- モード選択 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">解析モードを選択</label>
-          <div class="grid grid-cols-2 gap-2">
-            <button id="btn-merge" onclick="setMode('merge')" class="p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center transition-all">
-              🔄 裏表統合<br><span class="text-xs font-normal">2枚を1件に合体</span>
-            </button>
-            <button id="btn-multi" onclick="setMode('multi')" class="p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center hover:bg-gray-50 transition-all">
-              📚 複数一括<br><span class="text-xs font-normal">まとめてリスト化</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- ファイル選択 -->
-        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors relative">
-          <!-- onchangeを変更：追加選択に対応 -->
-          <input type="file" id="fileInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelect(this)">
-          
-          <div id="upload-placeholder">
-            <div class="text-4xl mb-2">📷</div>
-            <p class="text-gray-500 text-sm">タップしてカメラを起動<br>または画像を追加</p>
-          </div>
-          
-          <!-- プレビューエリア（グリッド表示） -->
-          <div id="preview-area" class="hidden grid grid-cols-2 gap-3 mt-2 pointer-events-none relative z-10">
-            <!-- JSで画像が追加されます -->
-          </div>
-        </div>
-        <p class="text-xs text-gray-400 text-center">※ 続けて選択・撮影することで画像を追加できます</p>
-
-        <!-- 実行ボタン -->
-        <button id="submitBtn" onclick="uploadAndAnalyze()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-400 transition-all">
-          解析を開始する
+      <!-- ===== タブ切替 ===== -->
+      <div class="bg-white flex border-b">
+        <button onclick="switchTab('scan')" id="tab-scan" class="flex-1 py-3 text-sm text-center tab-active">
+          名刺スキャン
         </button>
-
-        <!-- ステータス -->
-        <div id="status" class="hidden text-center p-4 rounded-lg bg-gray-100">
-          <div id="spinner" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 mb-2 mx-auto"></div>
-          <p id="status-text" class="text-gray-700 text-sm">画像を解析中...</p>
-        </div>
-
-        <!-- 結果表示 -->
-        <div id="result-area" class="hidden space-y-2">
-          <h3 class="font-bold text-gray-700">解析結果</h3>
-          <div id="result-list" class="text-sm bg-gray-50 p-2 rounded max-h-40 overflow-y-auto"></div>
-          <p class="text-xs text-green-600 text-center">✅ スプレッドシートに保存しました</p>
-        </div>
-
+        <button onclick="switchTab('result')" id="tab-result" class="flex-1 py-3 text-sm text-center text-gray-500 hover:text-gray-700">
+          SFA結果
+        </button>
       </div>
+
+      <!-- ===== タブ: 名刺スキャン ===== -->
+      <div id="panel-scan" class="bg-white rounded-b-xl shadow-lg overflow-hidden">
+        <div class="p-6 space-y-5">
+
+          <!-- 担当者名 -->
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">担当者名（あなたの名前）</label>
+            <input type="text" id="staffNameInput" placeholder="例: 田中太郎"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+          </div>
+
+          <!-- モード選択 -->
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-2">解析モード</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-merge" onclick="setMode('merge')" class="p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm transition-all">
+                裏表統合<br><span class="text-xs font-normal">2枚を1件に</span>
+              </button>
+              <button id="btn-multi" onclick="setMode('multi')" class="p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center text-sm hover:bg-gray-50 transition-all">
+                複数一括<br><span class="text-xs font-normal">まとめて解析</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ファイル選択 -->
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors relative">
+            <input type="file" id="fileInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelect(this)">
+            <div id="upload-placeholder">
+              <div class="text-4xl mb-2">📷</div>
+              <p class="text-gray-500 text-sm">タップしてカメラを起動<br>または画像を追加</p>
+            </div>
+            <div id="preview-area" class="hidden grid grid-cols-2 gap-3 mt-2 pointer-events-none relative z-10"></div>
+          </div>
+          <p class="text-xs text-gray-400 text-center">画像を追加選択できます</p>
+
+          <!-- SFA機能トグル -->
+          <div class="bg-indigo-50 rounded-lg p-3 space-y-2">
+            <p class="text-xs font-bold text-indigo-700">SFA自動分析（名刺登録と同時に実行）</p>
+            <label class="flex items-center gap-2 text-xs text-gray-700">
+              <input type="checkbox" id="chk-sns" checked class="rounded text-blue-600"> SNS・Web検索URLを生成
+            </label>
+            <label class="flex items-center gap-2 text-xs text-gray-700">
+              <input type="checkbox" id="chk-industry" checked class="rounded text-blue-600"> 業界分析・課題仮説を生成
+            </label>
+            <label class="flex items-center gap-2 text-xs text-gray-700">
+              <input type="checkbox" id="chk-dup" checked class="rounded text-blue-600"> 重複チェック（社内接触履歴）
+            </label>
+            <label class="flex items-center gap-2 text-xs text-gray-700">
+              <input type="checkbox" id="chk-similar" checked class="rounded text-blue-600"> 類似企業・ターゲット候補
+            </label>
+          </div>
+
+          <!-- 実行ボタン -->
+          <button id="submitBtn" onclick="uploadAndAnalyze()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-lg shadow-md hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 transition-all">
+            解析を開始する
+          </button>
+
+          <!-- ステータス -->
+          <div id="status" class="hidden text-center p-4 rounded-lg bg-gray-100">
+            <div id="spinner" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 mb-2 mx-auto"></div>
+            <p id="status-text" class="text-gray-700 text-sm">画像を解析中...</p>
+            <div id="progress-bar" class="mt-2 hidden">
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-fill" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <p id="progress-text" class="text-xs text-gray-500 mt-1"></p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ===== タブ: SFA結果 ===== -->
+      <div id="panel-result" class="bg-white rounded-b-xl shadow-lg overflow-hidden hidden">
+        <div class="p-4 space-y-4">
+
+          <div id="no-result" class="text-center text-gray-400 py-8">
+            <div class="text-4xl mb-2">📊</div>
+            <p class="text-sm">まだ解析結果がありません</p>
+          </div>
+
+          <div id="sfa-results" class="hidden space-y-4 fade-in">
+            <!-- JS で動的に生成 -->
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
+    <!-- ========================================= -->
+    <!-- JavaScript -->
+    <!-- ========================================= -->
     <script>
       let currentMode = 'merge';
-      let selectedFiles = []; // 選択された全ファイルを保持する配列
+      let selectedFiles = [];
+      let latestResults = [];
 
+      // ── タブ切替 ──
+      function switchTab(tab) {
+        document.getElementById('panel-scan').classList.toggle('hidden', tab !== 'scan');
+        document.getElementById('panel-result').classList.toggle('hidden', tab !== 'result');
+        document.getElementById('tab-scan').classList.toggle('tab-active', tab === 'scan');
+        document.getElementById('tab-result').classList.toggle('tab-active', tab === 'result');
+        document.getElementById('tab-scan').classList.toggle('text-gray-500', tab !== 'scan');
+        document.getElementById('tab-result').classList.toggle('text-gray-500', tab !== 'result');
+      }
+
+      // ── モード切替 ──
       function setMode(mode) {
         currentMode = mode;
         const btnMerge = document.getElementById('btn-merge');
         const btnMulti = document.getElementById('btn-multi');
-        
         if (mode === 'merge') {
-          btnMerge.className = "p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center transition-all";
-          btnMulti.className = "p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center hover:bg-gray-50 transition-all";
+          btnMerge.className = "p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm transition-all";
+          btnMulti.className = "p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center text-sm hover:bg-gray-50 transition-all";
         } else {
-          btnMerge.className = "p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center hover:bg-gray-50 transition-all";
-          btnMulti.className = "p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center transition-all";
+          btnMerge.className = "p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center text-sm hover:bg-gray-50 transition-all";
+          btnMulti.className = "p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm transition-all";
         }
       }
 
-      // ファイルが選択・撮影された時の処理（追加ロジック）
+      // ── ファイル選択 ──
       function handleFileSelect(input) {
         if (input.files && input.files.length > 0) {
-          const newFiles = Array.from(input.files);
-          // 既存のリストに追加
-          selectedFiles = selectedFiles.concat(newFiles);
-          
+          selectedFiles = selectedFiles.concat(Array.from(input.files));
           updatePreview();
-          
-          // inputをクリアして、同じファイルを再度選べるように＆連続選択可能にする
           input.value = '';
         }
       }
 
-      // プレビュー画面の更新
       function updatePreview() {
         const placeholder = document.getElementById('upload-placeholder');
         const previewArea = document.getElementById('preview-area');
-        
-        previewArea.innerHTML = ''; // 一度クリアして再描画
+        previewArea.innerHTML = '';
 
         if (selectedFiles.length > 0) {
           placeholder.classList.add('hidden');
           previewArea.classList.remove('hidden');
-          
           selectedFiles.forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = (e) => {
-              // 画像コンテナ
               const div = document.createElement('div');
-              div.className = 'relative group pointer-events-auto'; // pointer-events-autoでボタンを押せるように
-              
+              div.className = 'relative group pointer-events-auto';
               const img = document.createElement('img');
               img.src = e.target.result;
               img.className = 'w-full h-24 object-cover rounded-lg shadow border border-gray-200';
-              
-              // 削除ボタン (×)
               const removeBtn = document.createElement('button');
-              removeBtn.innerHTML = '×';
-              removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-md hover:bg-red-600 transition-colors z-20';
-              removeBtn.onclick = (ev) => {
-                ev.preventDefault(); // 親のクリックイベント等を防止
-                removeFile(index);
-              };
-
+              removeBtn.innerHTML = '&times;';
+              removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-md hover:bg-red-600 z-20';
+              removeBtn.onclick = (ev) => { ev.preventDefault(); removeFile(index); };
               div.appendChild(img);
               div.appendChild(removeBtn);
               previewArea.appendChild(div);
@@ -148,46 +220,38 @@
             reader.readAsDataURL(file);
           });
         } else {
-          // 画像が0枚になったらプレースホルダーを表示
           placeholder.classList.remove('hidden');
           previewArea.classList.add('hidden');
         }
       }
 
-      // 画像の削除処理
       function removeFile(index) {
-        selectedFiles.splice(index, 1); // 配列から削除
-        updatePreview(); // 再描画
+        selectedFiles.splice(index, 1);
+        updatePreview();
       }
 
+      // ── メイン実行 ──
       async function uploadAndAnalyze() {
-        if (selectedFiles.length === 0) {
-          alert("画像を選択してください");
-          return;
-        }
+        if (selectedFiles.length === 0) { alert("画像を選択してください"); return; }
         if (currentMode === 'merge' && selectedFiles.length !== 2) {
-          if(!confirm("裏表統合モードですが、画像が2枚ではありません（現在 " + selectedFiles.length + " 枚）。\n続行しますか？")) return;
+          if(!confirm("裏表統合モードですが画像が2枚ではありません（現在 " + selectedFiles.length + " 枚）。\n続行しますか？")) return;
         }
 
-        // UI更新
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('status').classList.remove('hidden');
-        document.getElementById('result-area').classList.add('hidden');
-        document.getElementById('status-text').innerText = "画像を圧縮・送信中...";
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        showStatus('画像を圧縮・送信中...', 10);
 
         try {
-          // 画像をBase64化 & リサイズ
           const processedImages = await Promise.all(selectedFiles.map(file => processFile(file)));
+          showStatus('AIが名刺を解析中...', 30);
 
-          document.getElementById('status-text').innerText = "AIが解析中... (Gemini 3.0)";
-
-          // サーバー側処理呼び出し
           google.script.run
             .withSuccessHandler(onSuccess)
             .withFailureHandler(onFailure)
             .analyzeFromWeb({
               mode: currentMode,
-              images: processedImages
+              images: processedImages,
+              staffName: document.getElementById('staffNameInput').value.trim(),
             });
 
         } catch (e) {
@@ -195,7 +259,6 @@
         }
       }
 
-      // 画像をリサイズしてBase64を返す関数
       function processFile(file) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -204,25 +267,13 @@
             img.onload = () => {
               const canvas = document.createElement('canvas');
               const ctx = canvas.getContext('2d');
-              
               const MAX_WIDTH = 1600;
-              let width = img.width;
-              let height = img.height;
-
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-
-              canvas.width = width;
-              canvas.height = height;
+              let width = img.width, height = img.height;
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+              canvas.width = width; canvas.height = height;
               ctx.drawImage(img, 0, 0, width, height);
-
               const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-              resolve({
-                mimeType: 'image/jpeg',
-                data: dataUrl.split(',')[1]
-              });
+              resolve({ mimeType: 'image/jpeg', data: dataUrl.split(',')[1] });
             };
             img.src = e.target.result;
           };
@@ -230,30 +281,114 @@
         });
       }
 
-      function onSuccess(res) {
-        document.getElementById('submitBtn').disabled = false;
+      // ── ステータス表示 ──
+      function showStatus(text, progress) {
+        document.getElementById('status').classList.remove('hidden');
+        document.getElementById('status-text').innerText = text;
+        if (progress !== undefined) {
+          document.getElementById('progress-bar').classList.remove('hidden');
+          document.getElementById('progress-fill').style.width = progress + '%';
+          document.getElementById('progress-text').innerText = progress + '% 完了';
+        }
+      }
+      function hideStatus() {
         document.getElementById('status').classList.add('hidden');
-        document.getElementById('result-area').classList.remove('hidden');
-
-        const list = document.getElementById('result-list');
-        list.innerHTML = '';
-        
-        res.data.forEach(item => {
-          const div = document.createElement('div');
-          div.className = "border-b border-gray-200 py-1";
-          div.innerHTML = `<b>${item.companyName || '会社名不明'}</b><br>${item.fullName || '氏名不明'}`;
-          list.appendChild(div);
-        });
-
-        // 成功したら画像リストをクリアするかどうかはお好みですが、今回は残しておきます（連続投稿しやすいように）
-        // selectedFiles = [];
-        // updatePreview();
+        document.getElementById('progress-bar').classList.add('hidden');
       }
 
+      // ── 成功コールバック ──
+      function onSuccess(res) {
+        document.getElementById('submitBtn').disabled = false;
+        hideStatus();
+        latestResults = res.data;
+        renderSfaResults(res.data);
+        switchTab('result');
+      }
+
+      // ── 失敗コールバック ──
       function onFailure(err) {
         document.getElementById('submitBtn').disabled = false;
-        document.getElementById('status').classList.add('hidden');
-        alert("エラーが発生しました: " + err.message);
+        hideStatus();
+        alert("エラーが発生しました: " + (err.message || err));
+      }
+
+      // ── SFA結果レンダリング ──
+      function renderSfaResults(data) {
+        const container = document.getElementById('sfa-results');
+        const noResult  = document.getElementById('no-result');
+
+        if (!data || data.length === 0) {
+          noResult.classList.remove('hidden');
+          container.classList.add('hidden');
+          return;
+        }
+
+        noResult.classList.add('hidden');
+        container.classList.remove('hidden');
+        container.innerHTML = '';
+
+        data.forEach((item, idx) => {
+          const card = document.createElement('div');
+          card.className = 'sfa-card bg-white border rounded-xl p-4 space-y-3 fade-in';
+          card.style.animationDelay = (idx * 0.1) + 's';
+
+          // ヘッダー (会社名 + 氏名)
+          let html = `
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-gray-800">${esc(item.companyName || '会社名不明')}</h3>
+                <p class="text-sm text-gray-600">${esc(item.fullName || '')} ${esc(item.title || '')}</p>
+              </div>
+              <span class="badge bg-blue-100 text-blue-700">#${idx + 1}</span>
+            </div>`;
+
+          // 重複アラート
+          if (item.duplicateAlert) {
+            html += `
+              <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                <p class="text-xs font-bold text-yellow-800">重複検知</p>
+                <p class="text-xs text-yellow-700 mt-1">${esc(item.duplicateAlert)}</p>
+              </div>`;
+          }
+
+          // 業界分析
+          if (item.industry || item.trends) {
+            html += `
+              <div class="bg-indigo-50 rounded-lg p-3">
+                <p class="text-xs font-bold text-indigo-700 mb-1">業界: ${esc(item.industry)}</p>
+                <details class="text-xs text-gray-700">
+                  <summary class="cursor-pointer text-indigo-600 font-medium">トレンド・課題を表示</summary>
+                  <div class="mt-2 space-y-2">
+                    <div><p class="font-semibold">トレンド:</p><p class="whitespace-pre-wrap">${esc(item.trends)}</p></div>
+                    <div><p class="font-semibold">想定課題:</p><p class="whitespace-pre-wrap">${esc(item.challenges)}</p></div>
+                  </div>
+                </details>
+              </div>`;
+          }
+
+          // 類似企業
+          if (item.similarCompanies) {
+            html += `
+              <div class="bg-green-50 rounded-lg p-3">
+                <p class="text-xs font-bold text-green-700 mb-1">ターゲット候補企業</p>
+                <p class="text-xs text-gray-700 whitespace-pre-wrap">${esc(item.similarCompanies)}</p>
+              </div>`;
+          }
+
+          // 保存完了
+          html += `<p class="text-xs text-green-600 text-center">スプレッドシートに保存しました</p>`;
+
+          card.innerHTML = html;
+          container.appendChild(card);
+        });
+      }
+
+      // HTMLエスケープ
+      function esc(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
       }
     </script>
   </body>

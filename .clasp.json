@@ -11,6 +11,16 @@
   "jsonExtensions": [
     ".json"
   ],
-  "filePushOrder": [],
+  "filePushOrder": [
+    "Config.js",
+    "GeminiService.js",
+    "SheetHelper.js",
+    "SnsResearch.js",
+    "IndustryAnalysis.js",
+    "DuplicateCheck.js",
+    "DormantRevival.js",
+    "SimilarCompany.js",
+    "コード.js"
+  ],
   "skipSubdirectories": false
 }

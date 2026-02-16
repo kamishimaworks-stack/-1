@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .fade-in { animation: fadeIn 0.4s ease-in; }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen p-4">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+      <!-- ヘッダー -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 text-center shadow-lg">
+        <h1 class="text-white text-2xl font-bold">SFA ダッシュボード</h1>
+        <p class="text-blue-100 text-sm mt-1">名刺SFA 管理画面</p>
+      </div>
+
+      <!-- 操作パネル -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div class="bg-white rounded-xl shadow p-5 text-center hover:shadow-lg transition-shadow">
+          <div class="text-3xl mb-2">🔍</div>
+          <h3 class="font-bold text-gray-700">休眠顧客チェック</h3>
+          <p class="text-xs text-gray-500 mt-1 mb-3">180日以上未接触の顧客を抽出し、メール下書きを生成</p>
+          <button onclick="runDormantCheck()" id="btn-dormant"
+                  class="bg-orange-500 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-gray-300">
+            手動実行
+          </button>
+          <p id="dormant-status" class="text-xs text-gray-500 mt-2"></p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5 text-center hover:shadow-lg transition-shadow">
+          <div class="text-3xl mb-2">🏢</div>
+          <h3 class="font-bold text-gray-700">類似企業バッチ分析</h3>
+          <p class="text-xs text-gray-500 mt-1 mb-3">未分析の顧客に対して競合・類似企業を一括検索</p>
+          <button onclick="runBatchSimilar()" id="btn-batch"
+                  class="bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-300">
+            バッチ実行
+          </button>
+          <p id="batch-status" class="text-xs text-gray-500 mt-2"></p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5 text-center hover:shadow-lg transition-shadow">
+          <div class="text-3xl mb-2">⚙️</div>
+          <h3 class="font-bold text-gray-700">初期セットアップ</h3>
+          <p class="text-xs text-gray-500 mt-1 mb-3">ヘッダー行の設定・必要シートの作成を実行</p>
+          <button onclick="runSetup()" id="btn-setup"
+                  class="bg-blue-500 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300">
+            セットアップ
+          </button>
+          <p id="setup-status" class="text-xs text-gray-500 mt-2"></p>
+        </div>
+
+      </div>
+
+      <!-- ログエリア -->
+      <div class="bg-white rounded-xl shadow p-5">
+        <h3 class="font-bold text-gray-700 mb-3">実行ログ</h3>
+        <div id="log-area" class="bg-gray-900 text-green-400 font-mono text-xs p-4 rounded-lg max-h-64 overflow-y-auto">
+          <p>ダッシュボードを読み込みました。操作を選択してください。</p>
+        </div>
+      </div>
+
+      <!-- 名刺スキャンへのリンク -->
+      <div class="text-center">
+        <a href="?" class="text-blue-600 text-sm hover:underline">← 名刺スキャン画面に戻る</a>
+      </div>
+
+    </div>
+
+    <script>
+      function addLog(msg) {
+        const logArea = document.getElementById('log-area');
+        const now = new Date().toLocaleTimeString('ja-JP');
+        const p = document.createElement('p');
+        p.textContent = `[${now}] ${msg}`;
+        logArea.appendChild(p);
+        logArea.scrollTop = logArea.scrollHeight;
+      }
+
+      function runDormantCheck() {
+        const btn = document.getElementById('btn-dormant');
+        btn.disabled = true;
+        document.getElementById('dormant-status').textContent = '実行中...';
+        addLog('休眠顧客チェックを開始...');
+
+        google.script.run
+          .withSuccessHandler(res => {
+            btn.disabled = false;
+            const msg = `完了: ${res.processed}件処理`;
+            document.getElementById('dormant-status').textContent = msg;
+            addLog(msg);
+          })
+          .withFailureHandler(err => {
+            btn.disabled = false;
+            document.getElementById('dormant-status').textContent = 'エラー';
+            addLog('エラー: ' + err.message);
+          })
+          .dailyDormantCustomerCheck();
+      }
+
+      function runBatchSimilar() {
+        const btn = document.getElementById('btn-batch');
+        btn.disabled = true;
+        document.getElementById('batch-status').textContent = '実行中...';
+        addLog('類似企業バッチ分析を開始...');
+
+        google.script.run
+          .withSuccessHandler(res => {
+            btn.disabled = false;
+            const msg = `完了: ${res.processed}/${res.total}件処理`;
+            document.getElementById('batch-status').textContent = msg;
+            addLog(msg);
+          })
+          .withFailureHandler(err => {
+            btn.disabled = false;
+            document.getElementById('batch-status').textContent = 'エラー';
+            addLog('エラー: ' + err.message);
+          })
+          .batchSimilarCompanyAnalysis();
+      }
+
+      function runSetup() {
+        const btn = document.getElementById('btn-setup');
+        btn.disabled = true;
+        document.getElementById('setup-status').textContent = '実行中...';
+        addLog('SFAセットアップを開始...');
+
+        google.script.run
+          .withSuccessHandler(() => {
+            btn.disabled = false;
+            document.getElementById('setup-status').textContent = '完了';
+            addLog('セットアップが完了しました');
+          })
+          .withFailureHandler(err => {
+            btn.disabled = false;
+            document.getElementById('setup-status').textContent = 'エラー';
+            addLog('エラー: ' + err.message);
+          })
+          .setupSFA();
+      }
+    </script>
+  </body>
+</html>
