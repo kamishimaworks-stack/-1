@@ -24,18 +24,10 @@
  * Webアプリのエントリーポイント
  */
 function doGet(e) {
-  const page = e && e.parameter && e.parameter.page;
-
-  if (page === 'dashboard') {
-    return HtmlService.createTemplateFromFile('dashboard')
-      .evaluate()
-      .setTitle('SFA ダッシュボード')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  }
-
   return HtmlService.createTemplateFromFile('index')
     .evaluate()
-    .setTitle('名刺AI解析スキャナー + SFA')
+    .setTitle('SFA Manager - Business Card CRM')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
@@ -307,4 +299,56 @@ function setupWeeklyTrigger() {
     .create();
 
   console.log('週次トリガーを設定しました (毎週月曜 9:00 実行)');
+}
+
+
+// ==========================================
+// フロントエンド API ブリッジ
+// ==========================================
+// google.script.run からはグローバル関数のみ呼べるため、
+// SheetHelper のメソッドをここでラップして公開する。
+
+/** ダッシュボード統計を返す */
+function api_getDashboardStats() {
+  return SheetHelper.getDashboardStats();
+}
+
+/** 全顧客データを返す */
+function api_getAllCustomers() {
+  return SheetHelper.getAllCustomers();
+}
+
+/** 顧客データを更新する */
+function api_updateCustomer(rowIndex, updates) {
+  return SheetHelper.updateCustomer(rowIndex, updates);
+}
+
+/** 顧客データを削除する */
+function api_deleteCustomer(rowIndex) {
+  return SheetHelper.deleteCustomer(rowIndex);
+}
+
+/** 休眠顧客メール下書きを返す */
+function api_getDormantDrafts() {
+  return SheetHelper.getDormantDrafts();
+}
+
+/** 類似企業リストを返す */
+function api_getSimilarCompanies() {
+  return SheetHelper.getSimilarCompanies();
+}
+
+/** 通知ログを返す */
+function api_getNotificationLogs() {
+  return SheetHelper.getNotificationLogs();
+}
+
+/** 休眠顧客チェックを手動実行 */
+function api_runDormantCheck() {
+  return DormantRevival.processAll();
+}
+
+/** 類似企業バッチ分析を実行 */
+function api_runBatchSimilar() {
+  return SimilarCompanyFinder.batchAnalyze(10);
 }

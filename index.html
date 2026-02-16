@@ -1,395 +1,613 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-    <meta charset="UTF-8">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      .loader {
-        border-top-color: #3498db;
-        -webkit-animation: spinner 1.5s linear infinite;
-        animation: spinner 1.5s linear infinite;
-      }
-      @keyframes spinner {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      .sfa-card {
-        transition: all 0.3s ease;
-      }
-      .sfa-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      }
-      .badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 9999px;
-        font-size: 0.7rem;
-        font-weight: 600;
-      }
-      .fade-in {
-        animation: fadeIn 0.4s ease-in;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-      .tab-active {
-        border-bottom: 3px solid #2563eb;
-        color: #2563eb;
-        font-weight: 700;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 min-h-screen p-4 flex flex-col items-center">
+<html lang="ja">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* ── global ── */
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b}
+/* ── sidebar ── */
+#sidebar{width:220px;transition:width .25s}
+@media(max-width:768px){#sidebar{width:56px}#sidebar .nav-label{display:none}#sidebar .logo-text{display:none}}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:8px;cursor:pointer;transition:all .15s;font-size:14px;color:#94a3b8}
+.nav-item:hover{background:#1e293b;color:#e2e8f0}
+.nav-item.active{background:#2563eb;color:#fff;font-weight:600}
+/* ── cards ── */
+.kpi-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:transform .15s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+/* ── table ── */
+.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.data-table thead th{background:#f8fafc;padding:10px 12px;text-align:left;font-weight:600;color:#64748b;border-bottom:2px solid #e2e8f0;position:sticky;top:0;z-index:2}
+.data-table tbody tr{transition:background .1s}
+.data-table tbody tr:hover{background:#f0f9ff}
+.data-table td{padding:8px 12px;border-bottom:1px solid #f1f5f9;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal-box{background:#fff;border-radius:16px;width:95%;max-width:720px;max-height:90vh;overflow-y:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:translateY(20px);transition:transform .2s}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+/* ── badge ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:600}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-green{background:#dcfce7;color:#16a34a}
+.badge-red{background:#fee2e2;color:#dc2626}
+.badge-yellow{background:#fef9c3;color:#a16207}
+.badge-gray{background:#f1f5f9;color:#64748b}
+/* ── loader ── */
+.spinner{border:3px solid #e2e8f0;border-top:3px solid #2563eb;border-radius:50%;width:28px;height:28px;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ── sns icon row ── */
+.sns-row a{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;font-size:14px;text-decoration:none;transition:transform .15s}
+.sns-row a:hover{transform:scale(1.15)}
+/* ── chart bar ── */
+.chart-bar{height:18px;border-radius:4px;background:#3b82f6;transition:width .5s ease}
+/* ── tab ── */
+.sub-tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;font-weight:500;color:#64748b;border-bottom:2px solid transparent}
+.sub-tab.active{color:#2563eb;border-bottom-color:#2563eb;background:#eff6ff}
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
 
-    <div class="max-w-lg w-full">
-
-      <!-- ===== ヘッダー ===== -->
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-t-xl p-5 text-center shadow-lg">
-        <h1 class="text-white text-xl font-bold tracking-wide">名刺AI解析 + SFA</h1>
-        <p class="text-blue-100 text-xs mt-1">Gemini 2.0 Flash / Sales Force Automation</p>
-      </div>
-
-      <!-- ===== タブ切替 ===== -->
-      <div class="bg-white flex border-b">
-        <button onclick="switchTab('scan')" id="tab-scan" class="flex-1 py-3 text-sm text-center tab-active">
-          名刺スキャン
-        </button>
-        <button onclick="switchTab('result')" id="tab-result" class="flex-1 py-3 text-sm text-center text-gray-500 hover:text-gray-700">
-          SFA結果
-        </button>
-      </div>
-
-      <!-- ===== タブ: 名刺スキャン ===== -->
-      <div id="panel-scan" class="bg-white rounded-b-xl shadow-lg overflow-hidden">
-        <div class="p-6 space-y-5">
-
-          <!-- 担当者名 -->
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">担当者名（あなたの名前）</label>
-            <input type="text" id="staffNameInput" placeholder="例: 田中太郎"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent">
-          </div>
-
-          <!-- モード選択 -->
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-2">解析モード</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button id="btn-merge" onclick="setMode('merge')" class="p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm transition-all">
-                裏表統合<br><span class="text-xs font-normal">2枚を1件に</span>
-              </button>
-              <button id="btn-multi" onclick="setMode('multi')" class="p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center text-sm hover:bg-gray-50 transition-all">
-                複数一括<br><span class="text-xs font-normal">まとめて解析</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- ファイル選択 -->
-          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors relative">
-            <input type="file" id="fileInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelect(this)">
-            <div id="upload-placeholder">
-              <div class="text-4xl mb-2">📷</div>
-              <p class="text-gray-500 text-sm">タップしてカメラを起動<br>または画像を追加</p>
-            </div>
-            <div id="preview-area" class="hidden grid grid-cols-2 gap-3 mt-2 pointer-events-none relative z-10"></div>
-          </div>
-          <p class="text-xs text-gray-400 text-center">画像を追加選択できます</p>
-
-          <!-- SFA機能トグル -->
-          <div class="bg-indigo-50 rounded-lg p-3 space-y-2">
-            <p class="text-xs font-bold text-indigo-700">SFA自動分析（名刺登録と同時に実行）</p>
-            <label class="flex items-center gap-2 text-xs text-gray-700">
-              <input type="checkbox" id="chk-sns" checked class="rounded text-blue-600"> SNS・Web検索URLを生成
-            </label>
-            <label class="flex items-center gap-2 text-xs text-gray-700">
-              <input type="checkbox" id="chk-industry" checked class="rounded text-blue-600"> 業界分析・課題仮説を生成
-            </label>
-            <label class="flex items-center gap-2 text-xs text-gray-700">
-              <input type="checkbox" id="chk-dup" checked class="rounded text-blue-600"> 重複チェック（社内接触履歴）
-            </label>
-            <label class="flex items-center gap-2 text-xs text-gray-700">
-              <input type="checkbox" id="chk-similar" checked class="rounded text-blue-600"> 類似企業・ターゲット候補
-            </label>
-          </div>
-
-          <!-- 実行ボタン -->
-          <button id="submitBtn" onclick="uploadAndAnalyze()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-lg shadow-md hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 transition-all">
-            解析を開始する
-          </button>
-
-          <!-- ステータス -->
-          <div id="status" class="hidden text-center p-4 rounded-lg bg-gray-100">
-            <div id="spinner" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 mb-2 mx-auto"></div>
-            <p id="status-text" class="text-gray-700 text-sm">画像を解析中...</p>
-            <div id="progress-bar" class="mt-2 hidden">
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div id="progress-fill" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-              <p id="progress-text" class="text-xs text-gray-500 mt-1"></p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ===== タブ: SFA結果 ===== -->
-      <div id="panel-result" class="bg-white rounded-b-xl shadow-lg overflow-hidden hidden">
-        <div class="p-4 space-y-4">
-
-          <div id="no-result" class="text-center text-gray-400 py-8">
-            <div class="text-4xl mb-2">📊</div>
-            <p class="text-sm">まだ解析結果がありません</p>
-          </div>
-
-          <div id="sfa-results" class="hidden space-y-4 fade-in">
-            <!-- JS で動的に生成 -->
-          </div>
-
-        </div>
-      </div>
-
+<!-- ============ SIDEBAR ============ -->
+<aside id="sidebar" class="bg-slate-900 flex flex-col shrink-0 h-full">
+  <div class="flex items-center gap-2 px-4 py-5 border-b border-slate-700">
+    <span class="text-2xl">&#x1F4C7;</span>
+    <span class="logo-text text-white font-bold text-sm tracking-wide">SFA Manager</span>
+  </div>
+  <nav class="flex-1 p-3 space-y-1" id="nav">
+    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+      <span>&#x1F4CA;</span><span class="nav-label">Dashboard</span>
     </div>
+    <div class="nav-item" data-page="customers" onclick="navigate('customers')">
+      <span>&#x1F465;</span><span class="nav-label">Contacts</span>
+    </div>
+    <div class="nav-item" data-page="scan" onclick="navigate('scan')">
+      <span>&#x1F4F7;</span><span class="nav-label">Card Scan</span>
+    </div>
+    <div class="nav-item" data-page="dormant" onclick="navigate('dormant')">
+      <span>&#x1F4E7;</span><span class="nav-label">Dormant</span>
+    </div>
+    <div class="nav-item" data-page="targets" onclick="navigate('targets')">
+      <span>&#x1F3AF;</span><span class="nav-label">Targets</span>
+    </div>
+  </nav>
+  <div class="p-4 border-t border-slate-700">
+    <button onclick="runSetup()" class="w-full text-xs text-slate-400 hover:text-white py-2 rounded hover:bg-slate-800 transition">Setup</button>
+  </div>
+</aside>
 
-    <!-- ========================================= -->
-    <!-- JavaScript -->
-    <!-- ========================================= -->
-    <script>
-      let currentMode = 'merge';
-      let selectedFiles = [];
-      let latestResults = [];
+<!-- ============ MAIN ============ -->
+<main class="flex-1 overflow-y-auto" id="main-area">
 
-      // ── タブ切替 ──
-      function switchTab(tab) {
-        document.getElementById('panel-scan').classList.toggle('hidden', tab !== 'scan');
-        document.getElementById('panel-result').classList.toggle('hidden', tab !== 'result');
-        document.getElementById('tab-scan').classList.toggle('tab-active', tab === 'scan');
-        document.getElementById('tab-result').classList.toggle('tab-active', tab === 'result');
-        document.getElementById('tab-scan').classList.toggle('text-gray-500', tab !== 'scan');
-        document.getElementById('tab-result').classList.toggle('text-gray-500', tab !== 'result');
-      }
+<!-- ===== PAGE: Dashboard ===== -->
+<div id="page-dashboard" class="page p-6 space-y-6">
+  <h1 class="text-xl font-bold text-slate-800">Dashboard</h1>
+  <!-- KPI Row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="kpi-row">
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">Total Contacts</p><p id="kpi-total" class="text-3xl font-bold text-slate-800">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">Active</p><p id="kpi-active" class="text-3xl font-bold text-green-600">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">Dormant (180d+)</p><p id="kpi-dormant" class="text-3xl font-bold text-orange-500">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">No Contact</p><p id="kpi-nocontact" class="text-3xl font-bold text-slate-400">-</p></div>
+  </div>
+  <!-- Charts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Monthly Registrations</h3><div id="chart-monthly" class="space-y-1"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Industry Breakdown</h3><div id="chart-industry" class="space-y-1"></div></div>
+  </div>
+  <!-- Staff + Alerts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Staff Ranking</h3><div id="staff-ranking"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">Recent Alerts</h3><div id="recent-alerts" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div></div>
+  </div>
+</div>
 
-      // ── モード切替 ──
-      function setMode(mode) {
-        currentMode = mode;
-        const btnMerge = document.getElementById('btn-merge');
-        const btnMulti = document.getElementById('btn-multi');
-        if (mode === 'merge') {
-          btnMerge.className = "p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm transition-all";
-          btnMulti.className = "p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center text-sm hover:bg-gray-50 transition-all";
-        } else {
-          btnMerge.className = "p-3 border-2 border-gray-200 text-gray-500 rounded-lg text-center text-sm hover:bg-gray-50 transition-all";
-          btnMulti.className = "p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm transition-all";
-        }
-      }
+<!-- ===== PAGE: Customers ===== -->
+<div id="page-customers" class="page hidden p-6 space-y-4">
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">Contacts</h1>
+    <input id="search-input" type="text" placeholder="Search name / company..." class="border rounded-lg px-3 py-2 text-sm w-64 focus:ring-2 focus:ring-blue-400" oninput="filterCustomers()">
+    <select id="filter-industry" class="border rounded-lg px-3 py-2 text-sm" onchange="filterCustomers()"><option value="">All Industries</option></select>
+    <button onclick="loadCustomers()" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700">Reload</button>
+  </div>
+  <div class="bg-white rounded-xl shadow overflow-x-auto">
+    <div id="customers-loading" class="py-10"><div class="spinner"></div></div>
+    <table class="data-table" id="customers-table" style="display:none">
+      <thead>
+        <tr>
+          <th class="cursor-pointer" onclick="sortTable('companyName')">Company</th>
+          <th class="cursor-pointer" onclick="sortTable('fullName')">Name</th>
+          <th class="cursor-pointer" onclick="sortTable('title')">Title</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th class="cursor-pointer" onclick="sortTable('industry')">Industry</th>
+          <th class="cursor-pointer" onclick="sortTable('lastContact')">Last Contact</th>
+          <th>Staff</th>
+          <th style="width:100px">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="customers-tbody"></tbody>
+    </table>
+  </div>
+  <p id="customers-count" class="text-xs text-slate-500"></p>
+</div>
 
-      // ── ファイル選択 ──
-      function handleFileSelect(input) {
-        if (input.files && input.files.length > 0) {
-          selectedFiles = selectedFiles.concat(Array.from(input.files));
-          updatePreview();
-          input.value = '';
-        }
-      }
+<!-- ===== PAGE: Scan ===== -->
+<div id="page-scan" class="page hidden p-6">
+  <div class="max-w-lg mx-auto space-y-5">
+    <h1 class="text-xl font-bold text-slate-800">Card Scan</h1>
+    <!-- Staff Name -->
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Your Name</label>
+      <input type="text" id="staffNameInput" placeholder="e.g. Tanaka Taro" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
+    </div>
+    <!-- Mode -->
+    <div class="grid grid-cols-2 gap-2">
+      <button id="btn-merge" onclick="setMode('merge')" class="p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm">Merge (front + back)</button>
+      <button id="btn-multi" onclick="setMode('multi')" class="p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50">Batch (multiple cards)</button>
+    </div>
+    <!-- Upload -->
+    <div class="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:bg-slate-50 transition relative">
+      <input type="file" id="fileInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelect(this)">
+      <div id="upload-placeholder"><span class="text-4xl block mb-2">&#x1F4F7;</span><p class="text-slate-500 text-sm">Tap to take photo or select images</p></div>
+      <div id="preview-area" class="hidden grid grid-cols-3 gap-3 pointer-events-none relative z-10"></div>
+    </div>
+    <!-- Run -->
+    <button id="submitBtn" onclick="uploadAndAnalyze()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow hover:bg-blue-700 disabled:bg-slate-400 transition">Scan & Analyze</button>
+    <!-- Status -->
+    <div id="scan-status" class="hidden text-center p-4 rounded-lg bg-slate-100">
+      <div class="spinner"></div>
+      <p id="scan-status-text" class="text-slate-600 text-sm mt-2">Processing...</p>
+    </div>
+    <!-- Result -->
+    <div id="scan-result" class="hidden space-y-3"></div>
+  </div>
+</div>
 
-      function updatePreview() {
-        const placeholder = document.getElementById('upload-placeholder');
-        const previewArea = document.getElementById('preview-area');
-        previewArea.innerHTML = '';
+<!-- ===== PAGE: Dormant ===== -->
+<div id="page-dormant" class="page hidden p-6 space-y-4">
+  <div class="flex items-center gap-3 flex-wrap">
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">Dormant Customers</h1>
+    <button onclick="runDormantCheck()" id="btn-run-dormant" class="bg-orange-500 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-slate-300">Generate Mail Drafts</button>
+  </div>
+  <div class="flex gap-2">
+    <div class="sub-tab active" onclick="switchDormantTab('list')">Dormant List</div>
+    <div class="sub-tab" onclick="switchDormantTab('drafts')">Mail Drafts</div>
+  </div>
+  <div id="dormant-panel-list" class="bg-white rounded-xl shadow overflow-x-auto">
+    <div id="dormant-loading" class="py-10"><div class="spinner"></div></div>
+    <table class="data-table" id="dormant-table" style="display:none">
+      <thead><tr><th>Company</th><th>Name</th><th>Email</th><th>Last Contact</th><th>Dormant Days</th><th>Industry</th><th>Staff</th></tr></thead>
+      <tbody id="dormant-tbody"></tbody>
+    </table>
+  </div>
+  <div id="dormant-panel-drafts" class="hidden space-y-3">
+    <div id="drafts-loading" class="py-10"><div class="spinner"></div></div>
+    <div id="drafts-list" class="space-y-3"></div>
+  </div>
+</div>
 
-        if (selectedFiles.length > 0) {
-          placeholder.classList.add('hidden');
-          previewArea.classList.remove('hidden');
-          selectedFiles.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const div = document.createElement('div');
-              div.className = 'relative group pointer-events-auto';
-              const img = document.createElement('img');
-              img.src = e.target.result;
-              img.className = 'w-full h-24 object-cover rounded-lg shadow border border-gray-200';
-              const removeBtn = document.createElement('button');
-              removeBtn.innerHTML = '&times;';
-              removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-md hover:bg-red-600 z-20';
-              removeBtn.onclick = (ev) => { ev.preventDefault(); removeFile(index); };
-              div.appendChild(img);
-              div.appendChild(removeBtn);
-              previewArea.appendChild(div);
-            };
-            reader.readAsDataURL(file);
-          });
-        } else {
-          placeholder.classList.remove('hidden');
-          previewArea.classList.add('hidden');
-        }
-      }
+<!-- ===== PAGE: Targets ===== -->
+<div id="page-targets" class="page hidden p-6 space-y-4">
+  <div class="flex items-center gap-3 flex-wrap">
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">Similar Companies & Targets</h1>
+    <button onclick="runBatchSimilar()" id="btn-run-similar" class="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-slate-300">Run Batch Analysis</button>
+  </div>
+  <div class="bg-white rounded-xl shadow overflow-x-auto">
+    <div id="targets-loading" class="py-10"><div class="spinner"></div></div>
+    <table class="data-table" id="targets-table" style="display:none">
+      <thead><tr><th>Base Company</th><th>Similar Company</th><th>Industry</th><th>Reason</th><th>Priority</th><th>URL</th><th>Date</th></tr></thead>
+      <tbody id="targets-tbody"></tbody>
+    </table>
+  </div>
+</div>
 
-      function removeFile(index) {
-        selectedFiles.splice(index, 1);
-        updatePreview();
-      }
+</main>
 
-      // ── メイン実行 ──
-      async function uploadAndAnalyze() {
-        if (selectedFiles.length === 0) { alert("画像を選択してください"); return; }
-        if (currentMode === 'merge' && selectedFiles.length !== 2) {
-          if(!confirm("裏表統合モードですが画像が2枚ではありません（現在 " + selectedFiles.length + " 枚）。\n続行しますか？")) return;
-        }
+<!-- ============ DETAIL MODAL ============ -->
+<div class="modal-overlay" id="detail-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center rounded-t-2xl">
+      <div class="flex-1">
+        <h2 id="modal-company" class="text-white font-bold text-lg"></h2>
+        <p id="modal-name-title" class="text-blue-100 text-sm mt-1"></p>
+      </div>
+      <button onclick="closeModal()" class="text-white/70 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6 space-y-5" id="modal-body"><!-- JS fills --></div>
+  </div>
+</div>
 
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        showStatus('画像を圧縮・送信中...', 10);
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+/* ==========================================
+   STATE
+   ========================================== */
+let allCustomers = [];
+let filteredCustomers = [];
+let sortKey = 'registeredDate';
+let sortAsc = false;
+let currentMode = 'merge';
+let selectedFiles = [];
 
-        try {
-          const processedImages = await Promise.all(selectedFiles.map(file => processFile(file)));
-          showStatus('AIが名刺を解析中...', 30);
+/* ==========================================
+   NAVIGATION
+   ========================================== */
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  // lazy load data
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'customers') { if (!allCustomers.length) loadCustomers(); }
+  if (page === 'dormant')   loadDormant();
+  if (page === 'targets')   loadTargets();
+}
 
-          google.script.run
-            .withSuccessHandler(onSuccess)
-            .withFailureHandler(onFailure)
-            .analyzeFromWeb({
-              mode: currentMode,
-              images: processedImages,
-              staffName: document.getElementById('staffNameInput').value.trim(),
-            });
+/* ==========================================
+   1. DASHBOARD
+   ========================================== */
+function loadDashboard() {
+  google.script.run.withSuccessHandler(renderDashboard).withFailureHandler(e=>console.error(e)).api_getDashboardStats();
+  google.script.run.withSuccessHandler(renderAlerts).withFailureHandler(()=>{}).api_getNotificationLogs();
+}
 
-        } catch (e) {
-          onFailure(e);
-        }
-      }
+function renderDashboard(s) {
+  document.getElementById('kpi-total').textContent = s.totalCustomers;
+  document.getElementById('kpi-active').textContent = s.activeCount;
+  document.getElementById('kpi-dormant').textContent = s.dormantCount;
+  document.getElementById('kpi-nocontact').textContent = s.noContactCount;
+  // Monthly chart
+  const mc = document.getElementById('chart-monthly');
+  const maxM = Math.max(...s.monthly.map(m=>m.count), 1);
+  mc.innerHTML = s.monthly.map(m => {
+    const pct = Math.round(m.count / maxM * 100);
+    return '<div class="flex items-center gap-2"><span class="text-xs text-slate-500 w-14 shrink-0">' + m.month.slice(5) + '</span><div class="flex-1 bg-slate-100 rounded h-5"><div class="chart-bar" style="width:' + pct + '%"></div></div><span class="text-xs font-semibold w-6 text-right">' + m.count + '</span></div>';
+  }).join('');
+  // Industry chart
+  const ic = document.getElementById('chart-industry');
+  const maxI = s.industries.length ? s.industries[0].count : 1;
+  ic.innerHTML = s.industries.length ? s.industries.map(i => {
+    const pct = Math.round(i.count / maxI * 100);
+    return '<div class="flex items-center gap-2"><span class="text-xs text-slate-500 w-24 shrink-0 truncate">' + esc(i.name) + '</span><div class="flex-1 bg-slate-100 rounded h-5"><div class="chart-bar bg-indigo-500" style="width:' + pct + '%"></div></div><span class="text-xs font-semibold w-6 text-right">' + i.count + '</span></div>';
+  }).join('') : '<p class="text-xs text-slate-400">No data yet</p>';
+  // Staff ranking
+  const sr = document.getElementById('staff-ranking');
+  sr.innerHTML = s.staffRanking.length ? '<table class="data-table"><tbody>' + s.staffRanking.map((st, i) => '<tr><td class="font-semibold">' + (i+1) + '. ' + esc(st.name) + '</td><td class="text-right">' + st.count + '</td></tr>').join('') + '</tbody></table>' : '<p class="text-xs text-slate-400">No data yet</p>';
+}
 
-      function processFile(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              const MAX_WIDTH = 1600;
-              let width = img.width, height = img.height;
-              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-              canvas.width = width; canvas.height = height;
-              ctx.drawImage(img, 0, 0, width, height);
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-              resolve({ mimeType: 'image/jpeg', data: dataUrl.split(',')[1] });
-            };
-            img.src = e.target.result;
-          };
-          reader.readAsDataURL(file);
-        });
-      }
+function renderAlerts(logs) {
+  const el = document.getElementById('recent-alerts');
+  if (!logs || !logs.length) { el.innerHTML = '<p class="text-slate-400">No alerts</p>'; return; }
+  el.innerHTML = logs.slice(0, 10).map(l => '<div class="p-2 bg-yellow-50 rounded border-l-2 border-yellow-400"><span class="font-semibold">' + esc(l.type) + '</span> ' + esc(l.company) + ' ' + esc(l.name) + '<br><span class="text-slate-400">' + fmtDate(l.datetime) + '</span></div>').join('');
+}
 
-      // ── ステータス表示 ──
-      function showStatus(text, progress) {
-        document.getElementById('status').classList.remove('hidden');
-        document.getElementById('status-text').innerText = text;
-        if (progress !== undefined) {
-          document.getElementById('progress-bar').classList.remove('hidden');
-          document.getElementById('progress-fill').style.width = progress + '%';
-          document.getElementById('progress-text').innerText = progress + '% 完了';
-        }
-      }
-      function hideStatus() {
-        document.getElementById('status').classList.add('hidden');
-        document.getElementById('progress-bar').classList.add('hidden');
-      }
+/* ==========================================
+   2. CUSTOMERS
+   ========================================== */
+function loadCustomers() {
+  document.getElementById('customers-loading').style.display = '';
+  document.getElementById('customers-table').style.display = 'none';
+  google.script.run.withSuccessHandler(data => {
+    allCustomers = data;
+    buildIndustryFilter(data);
+    filterCustomers();
+    document.getElementById('customers-loading').style.display = 'none';
+    document.getElementById('customers-table').style.display = '';
+  }).withFailureHandler(e => { alert('Load failed: ' + e.message); }).api_getAllCustomers();
+}
 
-      // ── 成功コールバック ──
-      function onSuccess(res) {
-        document.getElementById('submitBtn').disabled = false;
-        hideStatus();
-        latestResults = res.data;
-        renderSfaResults(res.data);
-        switchTab('result');
-      }
+function buildIndustryFilter(data) {
+  const sel = document.getElementById('filter-industry');
+  const industries = [...new Set(data.map(c => c.industry).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Industries</option>' + industries.map(i => '<option>' + esc(i) + '</option>').join('');
+}
 
-      // ── 失敗コールバック ──
-      function onFailure(err) {
-        document.getElementById('submitBtn').disabled = false;
-        hideStatus();
-        alert("エラーが発生しました: " + (err.message || err));
-      }
+function filterCustomers() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  const ind = document.getElementById('filter-industry').value;
+  filteredCustomers = allCustomers.filter(c => {
+    if (q && !(c.companyName.toLowerCase().includes(q) || c.fullName.toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q))) return false;
+    if (ind && c.industry !== ind) return false;
+    return true;
+  });
+  doSort();
+}
 
-      // ── SFA結果レンダリング ──
-      function renderSfaResults(data) {
-        const container = document.getElementById('sfa-results');
-        const noResult  = document.getElementById('no-result');
+function sortTable(key) {
+  if (sortKey === key) { sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
+  doSort();
+}
 
-        if (!data || data.length === 0) {
-          noResult.classList.remove('hidden');
-          container.classList.add('hidden');
-          return;
-        }
+function doSort() {
+  filteredCustomers.sort((a, b) => {
+    let va = a[sortKey] || '', vb = b[sortKey] || '';
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+  renderCustomerTable();
+}
 
-        noResult.classList.add('hidden');
-        container.classList.remove('hidden');
-        container.innerHTML = '';
+function renderCustomerTable() {
+  const tbody = document.getElementById('customers-tbody');
+  document.getElementById('customers-count').textContent = filteredCustomers.length + ' / ' + allCustomers.length + ' contacts';
+  if (!filteredCustomers.length) { tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400">No results</td></tr>'; return; }
+  tbody.innerHTML = filteredCustomers.map((c, i) => {
+    const dc = daysSince(c.lastContact);
+    const dcBadge = dc === null ? '<span class="badge badge-gray">N/A</span>' : dc >= 180 ? '<span class="badge badge-red">' + dc + 'd</span>' : dc >= 90 ? '<span class="badge badge-yellow">' + dc + 'd</span>' : '<span class="badge badge-green">' + dc + 'd</span>';
+    return '<tr>' +
+      '<td class="font-semibold cursor-pointer text-blue-600 hover:underline" onclick="openDetail(' + i + ')">' + esc(c.companyName) + '</td>' +
+      '<td>' + esc(c.fullName) + '</td>' +
+      '<td class="text-slate-500">' + esc(c.title) + '</td>' +
+      '<td><a href="mailto:' + esc(c.email) + '" class="text-blue-500 hover:underline">' + esc(c.email) + '</a></td>' +
+      '<td>' + esc(c.phone) + '</td>' +
+      '<td><span class="badge badge-blue">' + esc(c.industry) + '</span></td>' +
+      '<td>' + fmtDate(c.lastContact) + ' ' + dcBadge + '</td>' +
+      '<td>' + esc(c.staffName) + '</td>' +
+      '<td><button class="text-blue-600 hover:underline text-xs mr-2" onclick="openDetail(' + i + ')">Detail</button><button class="text-red-500 hover:underline text-xs" onclick="confirmDelete(' + c.rowIndex + ')">Delete</button></td>' +
+      '</tr>';
+  }).join('');
+}
 
-        data.forEach((item, idx) => {
-          const card = document.createElement('div');
-          card.className = 'sfa-card bg-white border rounded-xl p-4 space-y-3 fade-in';
-          card.style.animationDelay = (idx * 0.1) + 's';
+/* ── Detail Modal ── */
+function openDetail(idx) {
+  const c = filteredCustomers[idx];
+  if (!c) return;
+  document.getElementById('modal-company').textContent = c.companyName || 'Unknown';
+  document.getElementById('modal-name-title').textContent = (c.fullName || '') + (c.title ? ' / ' + c.title : '');
+  const body = document.getElementById('modal-body');
+  body.innerHTML =
+    '<div class="grid grid-cols-2 gap-4 text-sm">' +
+      field('Email', c.email, 'mailto:' + c.email) +
+      field('Phone', c.phone, 'tel:' + c.phone) +
+      field('Address', c.address) +
+      field('Website', c.website, c.website) +
+      field('Industry', c.industry) +
+      field('Staff', c.staffName) +
+      field('Registered', fmtDate(c.registeredDate)) +
+      field('Last Contact', fmtDate(c.lastContact)) +
+    '</div>' +
+    /* SNS */
+    '<div class="mt-4"><p class="text-xs font-semibold text-slate-500 mb-2">SNS Links</p><div class="sns-row flex gap-2">' +
+      snsLink('X', c.xUrl, '#000', '#fff') +
+      snsLink('Fb', c.facebookUrl, '#1877f2', '#fff') +
+      snsLink('Ig', c.instagramUrl, '#e1306c', '#fff') +
+      snsLink('Yt', c.youtubeUrl, '#ff0000', '#fff') +
+      snsLink('Tk', c.tiktokUrl, '#000', '#69c9d0') +
+      (c.companySite ? '<a href="' + esc(c.companySite) + '" target="_blank" class="text-xs text-blue-600 hover:underline ml-2 self-center">Company Site</a>' : '') +
+    '</div></div>' +
+    /* Trends */
+    (c.trends ? '<div class="mt-4 bg-indigo-50 rounded-lg p-4"><p class="text-xs font-semibold text-indigo-700 mb-2">Industry Trends</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.trends) + '</p></div>' : '') +
+    /* Challenges */
+    (c.challenges ? '<div class="bg-orange-50 rounded-lg p-4"><p class="text-xs font-semibold text-orange-700 mb-2">Estimated Challenges</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.challenges) + '</p></div>' : '') +
+    /* Similar */
+    (c.similar ? '<div class="bg-green-50 rounded-lg p-4"><p class="text-xs font-semibold text-green-700 mb-2">Similar Companies</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.similar) + '</p></div>' : '') +
+    /* Dup alert */
+    (c.dupAlert ? '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded"><p class="text-xs font-bold text-yellow-800">Duplicate Alert</p><p class="text-xs text-yellow-700">' + esc(c.dupAlert) + '</p></div>' : '') +
+    /* Edit button */
+    '<div class="flex gap-2 mt-4"><button onclick="startInlineEdit(' + idx + ')" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">Edit Contact</button>' +
+    '<button onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">Close</button></div>';
+  document.getElementById('detail-modal').classList.add('open');
+}
 
-          // ヘッダー (会社名 + 氏名)
-          let html = `
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="font-bold text-gray-800">${esc(item.companyName || '会社名不明')}</h3>
-                <p class="text-sm text-gray-600">${esc(item.fullName || '')} ${esc(item.title || '')}</p>
-              </div>
-              <span class="badge bg-blue-100 text-blue-700">#${idx + 1}</span>
-            </div>`;
+function startInlineEdit(idx) {
+  const c = filteredCustomers[idx];
+  if (!c) return;
+  const body = document.getElementById('modal-body');
+  body.innerHTML =
+    '<form onsubmit="saveEdit(event,' + c.rowIndex + ')" class="space-y-3">' +
+    editField('Company', 'edit-company', c.companyName) +
+    editField('Name', 'edit-name', c.fullName) +
+    editField('Title', 'edit-title', c.title) +
+    editField('Email', 'edit-email', c.email) +
+    editField('Phone', 'edit-phone', c.phone) +
+    editField('Address', 'edit-address', c.address) +
+    editField('Website', 'edit-website', c.website) +
+    editField('Staff', 'edit-staff', c.staffName) +
+    '<div class="flex gap-2"><button type="submit" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">Save</button><button type="button" onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">Cancel</button></div>' +
+    '</form>';
+}
 
-          // 重複アラート
-          if (item.duplicateAlert) {
-            html += `
-              <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
-                <p class="text-xs font-bold text-yellow-800">重複検知</p>
-                <p class="text-xs text-yellow-700 mt-1">${esc(item.duplicateAlert)}</p>
-              </div>`;
-          }
+function saveEdit(e, rowIndex) {
+  e.preventDefault();
+  const updates = {
+    companyName: document.getElementById('edit-company').value,
+    fullName:    document.getElementById('edit-name').value,
+    title:       document.getElementById('edit-title').value,
+    email:       document.getElementById('edit-email').value,
+    phone:       document.getElementById('edit-phone').value,
+    address:     document.getElementById('edit-address').value,
+    website:     document.getElementById('edit-website').value,
+    staffName:   document.getElementById('edit-staff').value,
+  };
+  google.script.run.withSuccessHandler(() => { closeModal(); loadCustomers(); }).withFailureHandler(err => alert('Save failed: ' + err.message)).api_updateCustomer(rowIndex, updates);
+}
 
-          // 業界分析
-          if (item.industry || item.trends) {
-            html += `
-              <div class="bg-indigo-50 rounded-lg p-3">
-                <p class="text-xs font-bold text-indigo-700 mb-1">業界: ${esc(item.industry)}</p>
-                <details class="text-xs text-gray-700">
-                  <summary class="cursor-pointer text-indigo-600 font-medium">トレンド・課題を表示</summary>
-                  <div class="mt-2 space-y-2">
-                    <div><p class="font-semibold">トレンド:</p><p class="whitespace-pre-wrap">${esc(item.trends)}</p></div>
-                    <div><p class="font-semibold">想定課題:</p><p class="whitespace-pre-wrap">${esc(item.challenges)}</p></div>
-                  </div>
-                </details>
-              </div>`;
-          }
+function confirmDelete(rowIndex) {
+  if (!confirm('Delete this contact? This cannot be undone.')) return;
+  google.script.run.withSuccessHandler(() => loadCustomers()).withFailureHandler(err => alert(err.message)).api_deleteCustomer(rowIndex);
+}
 
-          // 類似企業
-          if (item.similarCompanies) {
-            html += `
-              <div class="bg-green-50 rounded-lg p-3">
-                <p class="text-xs font-bold text-green-700 mb-1">ターゲット候補企業</p>
-                <p class="text-xs text-gray-700 whitespace-pre-wrap">${esc(item.similarCompanies)}</p>
-              </div>`;
-          }
+function closeModal() { document.getElementById('detail-modal').classList.remove('open'); }
 
-          // 保存完了
-          html += `<p class="text-xs text-green-600 text-center">スプレッドシートに保存しました</p>`;
+/* ==========================================
+   3. CARD SCAN
+   ========================================== */
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btn-merge').className = mode === 'merge' ? 'p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm' : 'p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50';
+  document.getElementById('btn-multi').className = mode === 'multi' ? 'p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm' : 'p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50';
+}
 
-          card.innerHTML = html;
-          container.appendChild(card);
-        });
-      }
+function handleFileSelect(input) {
+  if (input.files && input.files.length) { selectedFiles = selectedFiles.concat(Array.from(input.files)); updatePreview(); input.value = ''; }
+}
 
-      // HTMLエスケープ
-      function esc(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-      }
-    </script>
-  </body>
+function updatePreview() {
+  const ph = document.getElementById('upload-placeholder'), pa = document.getElementById('preview-area');
+  pa.innerHTML = '';
+  if (selectedFiles.length) {
+    ph.classList.add('hidden'); pa.classList.remove('hidden');
+    selectedFiles.forEach((f, i) => {
+      const r = new FileReader();
+      r.onload = e => {
+        const d = document.createElement('div'); d.className = 'relative pointer-events-auto';
+        const img = document.createElement('img'); img.src = e.target.result; img.className = 'w-full h-20 object-cover rounded-lg border';
+        const btn = document.createElement('button'); btn.innerHTML = '&times;'; btn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow'; btn.onclick = ev => { ev.preventDefault(); selectedFiles.splice(i, 1); updatePreview(); };
+        d.appendChild(img); d.appendChild(btn); pa.appendChild(d);
+      }; r.readAsDataURL(f);
+    });
+  } else { ph.classList.remove('hidden'); pa.classList.add('hidden'); }
+}
+
+async function uploadAndAnalyze() {
+  if (!selectedFiles.length) { alert('Select images first'); return; }
+  if (currentMode === 'merge' && selectedFiles.length !== 2 && !confirm('Merge mode expects 2 images (got ' + selectedFiles.length + '). Continue?')) return;
+  document.getElementById('submitBtn').disabled = true;
+  showScanStatus('Compressing images...');
+  try {
+    const imgs = await Promise.all(selectedFiles.map(processFile));
+    showScanStatus('AI is analyzing...');
+    google.script.run.withSuccessHandler(onScanSuccess).withFailureHandler(onScanFail).analyzeFromWeb({ mode: currentMode, images: imgs, staffName: document.getElementById('staffNameInput').value.trim() });
+  } catch (e) { onScanFail(e); }
+}
+
+function processFile(file) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'), ctx = c.getContext('2d');
+        let w = img.width, h = img.height; if (w > 1600) { h *= 1600/w; w = 1600; }
+        c.width = w; c.height = h; ctx.drawImage(img, 0, 0, w, h);
+        resolve({ mimeType: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.8).split(',')[1] });
+      }; img.src = e.target.result;
+    }; r.readAsDataURL(file);
+  });
+}
+
+function showScanStatus(t) { document.getElementById('scan-status').classList.remove('hidden'); document.getElementById('scan-status-text').textContent = t; }
+function hideScanStatus()  { document.getElementById('scan-status').classList.add('hidden'); }
+
+function onScanSuccess(res) {
+  document.getElementById('submitBtn').disabled = false;
+  hideScanStatus();
+  const el = document.getElementById('scan-result');
+  el.classList.remove('hidden');
+  el.innerHTML = '<p class="text-green-600 font-semibold text-sm">Saved ' + res.count + ' contact(s) to spreadsheet</p>' +
+    res.data.map(d => '<div class="bg-white rounded-lg border p-4 space-y-2">' +
+      '<p class="font-bold">' + esc(d.companyName) + '</p>' +
+      '<p class="text-sm text-slate-600">' + esc(d.fullName) + (d.email ? ' / ' + esc(d.email) : '') + '</p>' +
+      (d.duplicateAlert ? '<div class="text-xs bg-yellow-50 border-l-2 border-yellow-400 p-2 rounded">' + esc(d.duplicateAlert) + '</div>' : '') +
+      (d.industry ? '<span class="badge badge-blue">' + esc(d.industry) + '</span>' : '') +
+      (d.similarCompanies ? '<p class="text-xs text-slate-500">' + esc(d.similarCompanies) + '</p>' : '') +
+    '</div>').join('');
+  // Refresh customer data
+  allCustomers = [];
+}
+
+function onScanFail(e) { document.getElementById('submitBtn').disabled = false; hideScanStatus(); alert('Error: ' + (e.message || e)); }
+
+/* ==========================================
+   4. DORMANT
+   ========================================== */
+function loadDormant() { loadDormantList(); loadDormantDrafts(); }
+
+function switchDormantTab(tab) {
+  document.getElementById('dormant-panel-list').classList.toggle('hidden', tab !== 'list');
+  document.getElementById('dormant-panel-drafts').classList.toggle('hidden', tab !== 'drafts');
+  document.querySelectorAll('#page-dormant .sub-tab').forEach((t, i) => t.classList.toggle('active', (i===0 && tab==='list') || (i===1 && tab==='drafts')));
+}
+
+function loadDormantList() {
+  document.getElementById('dormant-loading').style.display = '';
+  document.getElementById('dormant-table').style.display = 'none';
+  google.script.run.withSuccessHandler(data => {
+    const now = new Date();
+    const rows = data.filter(c => {
+      if (!c.lastContact) return false;
+      return Math.floor((now - new Date(c.lastContact)) / 864e5) >= 180;
+    }).map(c => { const d = Math.floor((now - new Date(c.lastContact)) / 864e5); return {...c, dormantDays: d}; })
+    .sort((a,b) => b.dormantDays - a.dormantDays);
+    const tbody = document.getElementById('dormant-tbody');
+    tbody.innerHTML = rows.length ? rows.map(c =>
+      '<tr><td class="font-semibold">' + esc(c.companyName) + '</td><td>' + esc(c.fullName) + '</td><td>' + esc(c.email) + '</td><td>' + fmtDate(c.lastContact) + '</td><td><span class="badge badge-red">' + c.dormantDays + 'd</span></td><td>' + esc(c.industry) + '</td><td>' + esc(c.staffName) + '</td></tr>'
+    ).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">No dormant customers found</td></tr>';
+    document.getElementById('dormant-loading').style.display = 'none';
+    document.getElementById('dormant-table').style.display = '';
+  }).api_getAllCustomers();
+}
+
+function loadDormantDrafts() {
+  document.getElementById('drafts-loading').style.display = '';
+  google.script.run.withSuccessHandler(data => {
+    document.getElementById('drafts-loading').style.display = 'none';
+    const el = document.getElementById('drafts-list');
+    el.innerHTML = data.length ? data.map(d =>
+      '<div class="bg-white rounded-lg border p-4 space-y-2">' +
+        '<div class="flex justify-between items-start"><div><p class="font-semibold text-sm">' + esc(d.companyName) + ' - ' + esc(d.fullName) + '</p><p class="text-xs text-slate-400">' + fmtDate(d.generatedDate) + ' | ' + d.dormantDays + ' days dormant</p></div><span class="badge ' + (d.status==='sent' ? 'badge-green' : 'badge-yellow') + '">' + esc(d.status) + '</span></div>' +
+        '<p class="text-xs font-semibold text-slate-700">Subject: ' + esc(d.subject) + '</p>' +
+        '<p class="text-xs text-slate-600 whitespace-pre-wrap bg-slate-50 p-3 rounded">' + esc(d.body) + '</p>' +
+      '</div>'
+    ).join('') : '<p class="text-center text-slate-400 py-8">No drafts yet. Click "Generate Mail Drafts" to create.</p>';
+  }).api_getDormantDrafts();
+}
+
+function runDormantCheck() {
+  const btn = document.getElementById('btn-run-dormant');
+  btn.disabled = true; btn.textContent = 'Processing...';
+  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = 'Generate Mail Drafts'; alert('Processed ' + r.processed + ' customers'); loadDormant(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = 'Generate Mail Drafts'; alert(e.message); }).api_runDormantCheck();
+}
+
+/* ==========================================
+   5. TARGETS
+   ========================================== */
+function loadTargets() {
+  document.getElementById('targets-loading').style.display = '';
+  document.getElementById('targets-table').style.display = 'none';
+  google.script.run.withSuccessHandler(data => {
+    const tbody = document.getElementById('targets-tbody');
+    tbody.innerHTML = data.length ? data.map(c => {
+      const pCls = c.priority === 'High' || c.priority === '\u9AD8' ? 'badge-red' : c.priority === 'Medium' || c.priority === '\u4E2D' ? 'badge-yellow' : 'badge-gray';
+      return '<tr><td class="font-semibold">' + esc(c.baseCompany) + '</td><td>' + esc(c.similarName) + '</td><td><span class="badge badge-blue">' + esc(c.industry) + '</span></td><td class="text-xs">' + esc(c.reason) + '</td><td><span class="badge ' + pCls + '">' + esc(c.priority) + '</span></td><td>' + (c.estimatedUrl ? '<a href="' + esc(c.estimatedUrl) + '" target="_blank" class="text-blue-500 hover:underline text-xs">Visit</a>' : '-') + '</td><td class="text-xs">' + fmtDate(c.generatedDate) + '</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">No target data. Click "Run Batch Analysis".</td></tr>';
+    document.getElementById('targets-loading').style.display = 'none';
+    document.getElementById('targets-table').style.display = '';
+  }).api_getSimilarCompanies();
+}
+
+function runBatchSimilar() {
+  const btn = document.getElementById('btn-run-similar');
+  btn.disabled = true; btn.textContent = 'Analyzing...';
+  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = 'Run Batch Analysis'; alert('Processed ' + r.processed + '/' + r.total); loadTargets(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = 'Run Batch Analysis'; alert(e.message); }).api_runBatchSimilar();
+}
+
+/* ==========================================
+   SETUP
+   ========================================== */
+function runSetup() {
+  if (!confirm('Run initial setup? This will create sheets and headers.')) return;
+  google.script.run.withSuccessHandler(() => alert('Setup complete!')).withFailureHandler(e => alert(e.message)).setupSFA();
+}
+
+/* ==========================================
+   UTILS
+   ========================================== */
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function fmtDate(s) { if (!s) return '-'; try { const d = new Date(s); return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0'); } catch(e) { return '-'; } }
+function daysSince(s) { if (!s) return null; const d = new Date(s); if (isNaN(d)) return null; return Math.floor((new Date() - d) / 864e5); }
+function field(label, val, href) { return '<div><p class="text-xs text-slate-400">' + label + '</p>' + (href && val ? '<a href="' + esc(href) + '" target="_blank" class="text-blue-600 hover:underline">' + esc(val) + '</a>' : '<p class="font-medium">' + (esc(val) || '-') + '</p>') + '</div>'; }
+function editField(label, id, val) { return '<div><label class="text-xs text-slate-500">' + label + '</label><input id="' + id + '" value="' + esc(val) + '" class="w-full border rounded px-3 py-1.5 text-sm mt-1"></div>'; }
+function snsLink(label, url, bg, fg) { return url ? '<a href="' + esc(url) + '" target="_blank" style="background:' + bg + ';color:' + fg + '">' + label + '</a>' : ''; }
+
+/* ── INIT ── */
+navigate('dashboard');
+</script>
+</body>
 </html>
