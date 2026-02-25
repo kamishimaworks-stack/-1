@@ -1,0 +1,6 @@
+**/teams-manifest/**
+**/.clasp.json
+**/.claspignore
+**/.cursor/**
+**/.git/**
+**/README.md

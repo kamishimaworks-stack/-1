@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* ── global ── */
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b}
+/* ── sidebar ── */
+#sidebar{width:220px;transition:width .25s}
+@media(max-width:768px){#sidebar{width:56px}#sidebar .nav-label{display:none}#sidebar .logo-text{display:none}}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:8px;cursor:pointer;transition:all .15s;font-size:14px;color:#94a3b8}
+.nav-item:hover{background:#1e293b;color:#e2e8f0}
+.nav-item.active{background:#2563eb;color:#fff;font-weight:600}
+/* ── cards ── */
+.kpi-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:transform .15s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+/* ── table ── */
+.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.data-table thead th{background:#f8fafc;padding:10px 12px;text-align:left;font-weight:600;color:#64748b;border-bottom:2px solid #e2e8f0;position:sticky;top:0;z-index:2}
+.data-table tbody tr{transition:background .1s}
+.data-table tbody tr:hover{background:#f0f9ff}
+.data-table td{padding:8px 12px;border-bottom:1px solid #f1f5f9;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal-box{background:#fff;border-radius:16px;width:95%;max-width:720px;max-height:90vh;overflow-y:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:translateY(20px);transition:transform .2s}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+/* ── badge ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:600}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-green{background:#dcfce7;color:#16a34a}
+.badge-red{background:#fee2e2;color:#dc2626}
+.badge-yellow{background:#fef9c3;color:#a16207}
+.badge-gray{background:#f1f5f9;color:#64748b}
+/* ── loader ── */
+.spinner{border:3px solid #e2e8f0;border-top:3px solid #2563eb;border-radius:50%;width:28px;height:28px;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ── sns icon row ── */
+.sns-row a{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;font-size:14px;text-decoration:none;transition:transform .15s}
+.sns-row a:hover{transform:scale(1.15)}
+/* ── chart bar ── */
+.chart-bar{height:18px;border-radius:4px;background:#3b82f6;transition:width .5s ease}
+/* ── tab ── */
+.sub-tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;font-weight:500;color:#64748b;border-bottom:2px solid transparent}
+.sub-tab.active{color:#2563eb;border-bottom-color:#2563eb;background:#eff6ff}
+/* ── bottom nav (mobile) ── */
+.nav-item-mobile{cursor:pointer;transition:color .2s}
+.nav-item-mobile.active{color:#2563eb;font-weight:600}
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- ============ SIDEBAR ============ -->
+<aside id="sidebar" class="bg-slate-900 hidden md:flex flex-col shrink-0 h-full">
+  <div class="flex items-center gap-2 px-4 py-5 border-b border-slate-700">
+    <span class="text-2xl">&#x1F4C7;</span>
+    <span class="logo-text text-white font-bold text-sm tracking-wide">SFA 管理</span>
+  </div>
+  <nav class="flex-1 p-3 space-y-1" id="nav">
+    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+      <span>&#x1F4CA;</span><span class="nav-label">ダッシュボード</span>
+    </div>
+    <div class="nav-item" data-page="customers" onclick="navigate('customers')">
+      <span>&#x1F465;</span><span class="nav-label">顧客一覧</span>
+    </div>
+    <div class="nav-item" data-page="scan" onclick="navigate('scan')">
+      <span>&#x1F4F7;</span><span class="nav-label">名刺スキャン</span>
+    </div>
+    <div class="nav-item" data-page="dormant" onclick="navigate('dormant')">
+      <span>&#x1F4E7;</span><span class="nav-label">休眠顧客</span>
+    </div>
+    <div class="nav-item" data-page="targets" onclick="navigate('targets')">
+      <span>&#x1F3AF;</span><span class="nav-label">ターゲット</span>
+    </div>
+    <div class="nav-item" data-page="settings" onclick="navigate('settings')">
+      <span>&#x2699;</span><span class="nav-label">設定</span>
+    </div>
+  </nav>
+  <div class="p-4 border-t border-slate-700">
+    <button onclick="runSetup()" class="w-full text-xs text-slate-400 hover:text-white py-2 rounded hover:bg-slate-800 transition">セットアップ</button>
+  </div>
+</aside>
+
+<!-- ============ BOTTOM NAV (Mobile) ============ -->
+<nav id="bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+  <div class="nav-item-mobile flex flex-col items-center justify-center w-full h-full text-slate-500 active" data-page="dashboard" onclick="navigate('dashboard')">
+    <span class="text-xl">&#x1F4CA;</span>
+    <span class="text-[10px] mt-1">ホーム</span>
+  </div>
+  <div class="nav-item-mobile flex flex-col items-center justify-center w-full h-full text-slate-500" data-page="customers" onclick="navigate('customers')">
+    <span class="text-xl">&#x1F465;</span>
+    <span class="text-[10px] mt-1">顧客</span>
+  </div>
+  <div class="nav-item-mobile flex flex-col items-center justify-center w-full h-full text-blue-600" data-page="scan" onclick="navigate('scan')">
+    <div class="bg-blue-100 p-2 rounded-full mb-1">
+      <span class="text-xl">&#x1F4F7;</span>
+    </div>
+  </div>
+  <div class="nav-item-mobile flex flex-col items-center justify-center w-full h-full text-slate-500" data-page="dormant" onclick="navigate('dormant')">
+    <span class="text-xl">&#x1F4E7;</span>
+    <span class="text-[10px] mt-1">休眠</span>
+  </div>
+  <div class="nav-item-mobile flex flex-col items-center justify-center w-full h-full text-slate-500" data-page="settings" onclick="navigate('settings')">
+    <span class="text-xl">&#x2699;</span>
+    <span class="text-[10px] mt-1">設定</span>
+  </div>
+</nav>
+
+<!-- ============ MAIN ============ -->
+<main class="flex-1 overflow-y-auto pb-20 md:pb-0" id="main-area">
+
+<!-- ===== PAGE: Dashboard ===== -->
+<div id="page-dashboard" class="page p-6 space-y-6">
+  <h1 class="text-xl font-bold text-slate-800">ダッシュボード</h1>
+  <!-- KPI Row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="kpi-row">
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">顧客総数</p><p id="kpi-total" class="text-3xl font-bold text-slate-800">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">アクティブ</p><p id="kpi-active" class="text-3xl font-bold text-green-600">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">休眠（180日以上）</p><p id="kpi-dormant" class="text-3xl font-bold text-orange-500">-</p></div>
+    <div class="kpi-card"><p class="text-xs text-slate-500 mb-1">未接触</p><p id="kpi-nocontact" class="text-3xl font-bold text-slate-400">-</p></div>
+  </div>
+  <!-- Charts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">月別登録数</h3><div id="chart-monthly" class="space-y-1"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">業種別内訳</h3><div id="chart-industry" class="space-y-1"></div></div>
+  </div>
+  <!-- Staff + Alerts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">担当者ランキング</h3><div id="staff-ranking"></div></div>
+    <div class="kpi-card"><h3 class="font-semibold text-sm text-slate-600 mb-3">最近のアラート</h3><div id="recent-alerts" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div></div>
+  </div>
+</div>
+
+<!-- ===== PAGE: Customers ===== -->
+<div id="page-customers" class="page hidden p-6 space-y-4">
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">顧客一覧</h1>
+    <input id="search-input" type="text" placeholder="氏名・会社名で検索..." class="border rounded-lg px-3 py-2 text-sm w-64 focus:ring-2 focus:ring-blue-400" oninput="filterCustomers()">
+    <select id="filter-industry" class="border rounded-lg px-3 py-2 text-sm" onchange="filterCustomers()"><option value="">全業種</option></select>
+    <button onclick="loadCustomers()" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700">再読み込み</button>
+  </div>
+  <!-- テーブル表示 (PC) -->
+  <div class="hidden md:block bg-white rounded-xl shadow overflow-x-auto">
+    <div id="customers-loading" class="py-10"><div class="spinner"></div></div>
+    <table class="data-table" id="customers-table" style="display:none">
+      <thead>
+        <tr>
+          <th class="cursor-pointer" onclick="sortTable('companyName')">会社名</th>
+          <th class="cursor-pointer" onclick="sortTable('fullName')">氏名</th>
+          <th class="cursor-pointer" onclick="sortTable('title')">役職</th>
+          <th>メール</th>
+          <th>電話</th>
+          <th class="cursor-pointer" onclick="sortTable('industry')">業種</th>
+          <th class="cursor-pointer" onclick="sortTable('lastContact')">最終接触日</th>
+          <th>担当者</th>
+          <th style="width:100px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="customers-tbody"></tbody>
+    </table>
+  </div>
+  <!-- カード表示 (スマホ) -->
+  <div class="md:hidden space-y-3">
+    <div id="customers-loading-mobile" class="py-10"><div class="spinner"></div></div>
+    <div id="customers-cards" class="space-y-3" style="display:none"></div>
+  </div>
+  <p id="customers-count" class="text-xs text-slate-500"></p>
+</div>
+
+<!-- ===== PAGE: Scan ===== -->
+<div id="page-scan" class="page hidden p-6">
+  <div class="max-w-lg mx-auto space-y-5">
+    <h1 class="text-xl font-bold text-slate-800">名刺スキャン</h1>
+    <!-- Staff Name -->
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">担当者名</label>
+      <input type="text" id="staffNameInput" placeholder="例：田中 太郎" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
+    </div>
+    <!-- Mode -->
+    <div class="grid grid-cols-2 gap-2">
+      <button id="btn-merge" onclick="setMode('merge')" class="p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm">表裏統合</button>
+      <button id="btn-multi" onclick="setMode('multi')" class="p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50">複数枚一括</button>
+    </div>
+    <!-- Upload -->
+    <div class="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:bg-slate-50 transition relative">
+      <input type="file" id="fileInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelect(this)">
+      <div id="upload-placeholder"><span class="text-4xl block mb-2">&#x1F4F7;</span><p class="text-slate-500 text-sm">タップしてカメラを起動<br>または画像を選択</p></div>
+      <div id="preview-area" class="hidden grid grid-cols-3 gap-3 pointer-events-none relative z-10"></div>
+    </div>
+    <!-- Run -->
+    <button id="submitBtn" onclick="uploadAndAnalyze()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow hover:bg-blue-700 disabled:bg-slate-400 transition">スキャン＆解析</button>
+    <!-- Status -->
+    <div id="scan-status" class="hidden text-center p-4 rounded-lg bg-slate-100">
+      <div class="spinner"></div>
+      <p id="scan-status-text" class="text-slate-600 text-sm mt-2">処理中...</p>
+    </div>
+    <!-- Result -->
+    <div id="scan-result" class="hidden space-y-3"></div>
+  </div>
+</div>
+
+<!-- ===== PAGE: Dormant ===== -->
+<div id="page-dormant" class="page hidden p-6 space-y-4">
+  <div class="flex items-center gap-3 flex-wrap">
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">休眠顧客</h1>
+    <button onclick="runDormantCheck()" id="btn-run-dormant" class="bg-orange-500 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-slate-300">メール下書き生成</button>
+  </div>
+  <div class="flex gap-2">
+    <div class="sub-tab active" onclick="switchDormantTab('list')">休眠リスト</div>
+    <div class="sub-tab" onclick="switchDormantTab('drafts')">メール下書き</div>
+  </div>
+  <div id="dormant-panel-list" class="bg-white rounded-xl shadow overflow-x-auto">
+    <div id="dormant-loading" class="py-10"><div class="spinner"></div></div>
+    <table class="data-table" id="dormant-table" style="display:none">
+      <thead><tr><th>会社名</th><th>氏名</th><th>メール</th><th>最終接触日</th><th>休眠日数</th><th>業種</th><th>担当者</th></tr></thead>
+      <tbody id="dormant-tbody"></tbody>
+    </table>
+  </div>
+  <div id="dormant-panel-drafts" class="hidden space-y-3">
+    <div id="drafts-loading" class="py-10"><div class="spinner"></div></div>
+    <div id="drafts-list" class="space-y-3"></div>
+  </div>
+</div>
+
+<!-- ===== PAGE: Targets ===== -->
+<div id="page-targets" class="page hidden p-6 space-y-4">
+  <div class="flex items-center gap-3 flex-wrap">
+    <h1 class="text-xl font-bold text-slate-800 mr-auto">類似企業・ターゲット</h1>
+    <button onclick="runBatchSimilar()" id="btn-run-similar" class="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-slate-300">一括分析実行</button>
+  </div>
+  <div class="bg-white rounded-xl shadow overflow-x-auto">
+    <div id="targets-loading" class="py-10"><div class="spinner"></div></div>
+    <table class="data-table" id="targets-table" style="display:none">
+      <thead><tr><th>基準企業</th><th>類似企業</th><th>業種</th><th>類似理由</th><th>優先度</th><th>URL</th><th>日付</th></tr></thead>
+      <tbody id="targets-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== PAGE: Settings ===== -->
+<div id="page-settings" class="page hidden p-6 space-y-6">
+  <h1 class="text-xl font-bold text-slate-800">設定</h1>
+
+  <!-- Microsoft 365 連携 -->
+  <div class="kpi-card space-y-4">
+    <h3 class="font-semibold text-sm text-slate-600">Microsoft 365 連携</h3>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-slate-500">認証ステータス:</span>
+      <span id="ms-auth-status" class="badge badge-gray">確認中...</span>
+    </div>
+    <div class="flex gap-2">
+      <button id="btn-ms-auth" onclick="startMicrosoftAuth()" class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-slate-300">Microsoft 認証</button>
+      <button id="btn-ms-logout" onclick="microsoftLogout()" class="bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-600 disabled:bg-slate-300" style="display:none">認証解除</button>
+    </div>
+  </div>
+
+  <!-- Outlook 同期 -->
+  <div class="kpi-card space-y-4">
+    <h3 class="font-semibold text-sm text-slate-600">Outlook メール同期</h3>
+    <p class="text-xs text-slate-400">Outlook のメール履歴からスプレッドシートの「最終接触日」を自動更新します。</p>
+    <button id="btn-outlook-sync" onclick="runOutlookSync()" class="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-slate-300">手動同期を実行</button>
+    <div id="outlook-sync-result" class="hidden text-sm p-3 bg-slate-50 rounded-lg"></div>
+  </div>
+
+  <!-- メールプロバイダー -->
+  <div class="kpi-card space-y-4">
+    <h3 class="font-semibold text-sm text-slate-600">メールプロバイダー設定</h3>
+    <p class="text-xs text-slate-400">休眠顧客メール下書きの保存先を設定します。Config.js の MICROSOFT.EMAIL_PROVIDER で変更可能です。</p>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-slate-500">現在の設定:</span>
+      <span id="email-provider-display" class="badge badge-blue">-</span>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ============ DETAIL MODAL ============ -->
+<div class="modal-overlay" id="detail-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center rounded-t-2xl">
+      <div class="flex-1">
+        <h2 id="modal-company" class="text-white font-bold text-lg"></h2>
+        <p id="modal-name-title" class="text-blue-100 text-sm mt-1"></p>
+      </div>
+      <button onclick="closeModal()" class="text-white/70 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6 space-y-5" id="modal-body"><!-- JS fills --></div>
+  </div>
+</div>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+/* ==========================================
+   STATE
+   ========================================== */
+let allCustomers = [];
+let filteredCustomers = [];
+let sortKey = 'registeredDate';
+let sortAsc = false;
+let currentMode = 'merge';
+let selectedFiles = [];
+
+/* ==========================================
+   NAVIGATION
+   ========================================== */
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  
+  // ボトムナビのアクティブ切り替え (スマホ用)
+  document.querySelectorAll('.nav-item-mobile').forEach(n => {
+    const isActive = n.dataset.page === page;
+    n.classList.toggle('active', isActive);
+    if (n.dataset.page !== 'scan') {
+      n.classList.toggle('text-blue-600', isActive);
+      n.classList.toggle('text-slate-500', !isActive);
+    }
+  });
+  
+  // lazy load data
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'customers') { if (!allCustomers.length) loadCustomers(); }
+  if (page === 'dormant')   loadDormant();
+  if (page === 'targets')   loadTargets();
+  if (page === 'settings')  loadSettings();
+}
+
+/* ==========================================
+   1. DASHBOARD
+   ========================================== */
+function loadDashboard() {
+  google.script.run.withSuccessHandler(renderDashboard).withFailureHandler(e=>console.error(e)).api_getDashboardStats();
+  google.script.run.withSuccessHandler(renderAlerts).withFailureHandler(()=>{}).api_getNotificationLogs();
+}
+
+function renderDashboard(s) {
+  document.getElementById('kpi-total').textContent = s.totalCustomers;
+  document.getElementById('kpi-active').textContent = s.activeCount;
+  document.getElementById('kpi-dormant').textContent = s.dormantCount;
+  document.getElementById('kpi-nocontact').textContent = s.noContactCount;
+  // Monthly chart
+  const mc = document.getElementById('chart-monthly');
+  const maxM = Math.max(...s.monthly.map(m=>m.count), 1);
+  mc.innerHTML = s.monthly.map(m => {
+    const pct = Math.round(m.count / maxM * 100);
+    return '<div class="flex items-center gap-2"><span class="text-xs text-slate-500 w-14 shrink-0">' + m.month.slice(5) + '</span><div class="flex-1 bg-slate-100 rounded h-5"><div class="chart-bar" style="width:' + pct + '%"></div></div><span class="text-xs font-semibold w-6 text-right">' + m.count + '</span></div>';
+  }).join('');
+  // Industry chart
+  const ic = document.getElementById('chart-industry');
+  const maxI = s.industries.length ? s.industries[0].count : 1;
+  ic.innerHTML = s.industries.length ? s.industries.map(i => {
+    const pct = Math.round(i.count / maxI * 100);
+    return '<div class="flex items-center gap-2"><span class="text-xs text-slate-500 w-24 shrink-0 truncate">' + esc(i.name) + '</span><div class="flex-1 bg-slate-100 rounded h-5"><div class="chart-bar bg-indigo-500" style="width:' + pct + '%"></div></div><span class="text-xs font-semibold w-6 text-right">' + i.count + '</span></div>';
+  }).join('') : '<p class="text-xs text-slate-400">データがありません</p>';
+  // Staff ranking
+  const sr = document.getElementById('staff-ranking');
+  sr.innerHTML = s.staffRanking.length ? '<table class="data-table"><tbody>' + s.staffRanking.map((st, i) => '<tr><td class="font-semibold">' + (i+1) + '. ' + esc(st.name) + '</td><td class="text-right">' + st.count + '</td></tr>').join('') + '</tbody></table>' : '<p class="text-xs text-slate-400">No data yet</p>';
+}
+
+function renderAlerts(logs) {
+  const el = document.getElementById('recent-alerts');
+  if (!logs || !logs.length) { el.innerHTML = '<p class="text-slate-400">アラートはありません</p>'; return; }
+  el.innerHTML = logs.slice(0, 10).map(l => '<div class="p-2 bg-yellow-50 rounded border-l-2 border-yellow-400"><span class="font-semibold">' + esc(l.type) + '</span> ' + esc(l.company) + ' ' + esc(l.name) + '<br><span class="text-slate-400">' + fmtDate(l.datetime) + '</span></div>').join('');
+}
+
+/* ==========================================
+   2. CUSTOMERS
+   ========================================== */
+function loadCustomers() {
+  document.getElementById('customers-loading').style.display = '';
+  document.getElementById('customers-loading-mobile').style.display = '';
+  document.getElementById('customers-table').style.display = 'none';
+  document.getElementById('customers-cards').style.display = 'none';
+  google.script.run.withSuccessHandler(data => {
+    allCustomers = data;
+    buildIndustryFilter(data);
+    filterCustomers();
+    document.getElementById('customers-loading').style.display = 'none';
+    document.getElementById('customers-loading-mobile').style.display = 'none';
+    document.getElementById('customers-table').style.display = '';
+    document.getElementById('customers-cards').style.display = '';
+  }).withFailureHandler(e => { alert('読み込みに失敗しました: ' + e.message); }).api_getAllCustomers();
+}
+
+function buildIndustryFilter(data) {
+  const sel = document.getElementById('filter-industry');
+  const industries = [...new Set(data.map(c => c.industry).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">全業種</option>' + industries.map(i => '<option>' + esc(i) + '</option>').join('');
+}
+
+function filterCustomers() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  const ind = document.getElementById('filter-industry').value;
+  filteredCustomers = allCustomers.filter(c => {
+    if (q && !(c.companyName.toLowerCase().includes(q) || c.fullName.toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q))) return false;
+    if (ind && c.industry !== ind) return false;
+    return true;
+  });
+  doSort();
+}
+
+function sortTable(key) {
+  if (sortKey === key) { sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
+  doSort();
+}
+
+function doSort() {
+  filteredCustomers.sort((a, b) => {
+    let va = a[sortKey] || '', vb = b[sortKey] || '';
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+  renderCustomerTable();
+}
+
+function renderCustomerTable() {
+  const tbody = document.getElementById('customers-tbody');
+  const cards = document.getElementById('customers-cards');
+  document.getElementById('customers-count').textContent = filteredCustomers.length + ' / ' + allCustomers.length + ' 件';
+  
+  if (!filteredCustomers.length) { 
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400">該当なし</td></tr>';
+    cards.innerHTML = '<div class="text-center py-8 text-slate-400">該当なし</div>';
+    return;
+  }
+  
+  // テーブル行を生成 (PC用)
+  tbody.innerHTML = filteredCustomers.map((c, i) => {
+    const dc = daysSince(c.lastContact);
+    const dcBadge = dc === null ? '<span class="badge badge-gray">N/A</span>' : dc >= 180 ? '<span class="badge badge-red">' + dc + 'd</span>' : dc >= 90 ? '<span class="badge badge-yellow">' + dc + 'd</span>' : '<span class="badge badge-green">' + dc + 'd</span>';
+    return '<tr>' +
+      '<td class="font-semibold cursor-pointer text-blue-600 hover:underline" onclick="openDetail(' + i + ')">' + esc(c.companyName) + '</td>' +
+      '<td>' + esc(c.fullName) + '</td>' +
+      '<td class="text-slate-500">' + esc(c.title) + '</td>' +
+      '<td><a href="mailto:' + esc(c.email) + '" class="text-blue-500 hover:underline">' + esc(c.email) + '</a></td>' +
+      '<td>' + esc(c.phone) + '</td>' +
+      '<td><span class="badge badge-blue">' + esc(c.industry) + '</span></td>' +
+      '<td>' + fmtDate(c.lastContact) + ' ' + dcBadge + '</td>' +
+      '<td>' + esc(c.staffName) + '</td>' +
+      '<td><button class="text-blue-600 hover:underline text-xs mr-2" onclick="openDetail(' + i + ')">詳細</button><button class="text-red-500 hover:underline text-xs" onclick="confirmDelete(' + c.rowIndex + ')">削除</button></td>' +
+      '</tr>';
+  }).join('');
+  
+  // カードを生成 (スマホ用)
+  cards.innerHTML = filteredCustomers.map((c, i) => {
+    const dc = daysSince(c.lastContact);
+    const dcBadge = dc === null ? '<span class="badge badge-gray">N/A</span>' : dc >= 180 ? '<span class="badge badge-red">' + dc + 'd</span>' : dc >= 90 ? '<span class="badge badge-yellow">' + dc + 'd</span>' : '<span class="badge badge-green">' + dc + 'd</span>';
+    return '<div class="bg-white rounded-lg border border-slate-200 p-4 shadow-sm" onclick="openDetail(' + i + ')">' +
+      '<div class="flex justify-between items-start mb-2">' +
+        '<div class="flex-1">' +
+          '<h3 class="font-bold text-slate-800 text-base">' + esc(c.companyName) + '</h3>' +
+          '<p class="text-sm text-slate-600 mt-1">' + esc(c.fullName) + (c.title ? ' / ' + esc(c.title) : '') + '</p>' +
+        '</div>' +
+        (c.industry ? '<span class="badge badge-blue ml-2">' + esc(c.industry) + '</span>' : '') +
+      '</div>' +
+      '<div class="space-y-1 text-xs text-slate-500 mt-3">' +
+        (c.email ? '<div class="flex items-center gap-2"><span>✉</span><span>' + esc(c.email) + '</span></div>' : '') +
+        (c.phone ? '<div class="flex items-center gap-2"><span>📞</span><span>' + esc(c.phone) + '</span></div>' : '') +
+        '<div class="flex items-center gap-2"><span>👤</span><span>' + (c.staffName || '-') + '</span></div>' +
+        '<div class="flex items-center gap-2"><span>📅</span><span>' + fmtDate(c.lastContact) + ' ' + dcBadge + '</span></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ── Detail Modal ── */
+function openDetail(idx) {
+  const c = filteredCustomers[idx];
+  if (!c) return;
+  document.getElementById('modal-company').textContent = c.companyName || '不明';
+  document.getElementById('modal-name-title').textContent = (c.fullName || '') + (c.title ? ' / ' + c.title : '');
+  const body = document.getElementById('modal-body');
+  body.innerHTML =
+    '<div class="grid grid-cols-2 gap-4 text-sm">' +
+      field('メール', c.email, 'mailto:' + c.email) +
+      field('電話', c.phone, 'tel:' + c.phone) +
+      field('住所', c.address) +
+      field('Webサイト', c.website, c.website) +
+      field('業種', c.industry) +
+      field('担当者', c.staffName) +
+      field('登録日', fmtDate(c.registeredDate)) +
+      field('最終接触日', fmtDate(c.lastContact)) +
+    '</div>' +
+    /* SNS */
+    '<div class="mt-4"><p class="text-xs font-semibold text-slate-500 mb-2">SNSリンク</p><div class="sns-row flex gap-2">' +
+      snsLink('X', c.xUrl, '#000', '#fff') +
+      snsLink('Fb', c.facebookUrl, '#1877f2', '#fff') +
+      snsLink('Ig', c.instagramUrl, '#e1306c', '#fff') +
+      snsLink('Yt', c.youtubeUrl, '#ff0000', '#fff') +
+      snsLink('Tk', c.tiktokUrl, '#000', '#69c9d0') +
+      (c.companySite ? '<a href="' + esc(c.companySite) + '" target="_blank" class="text-xs text-blue-600 hover:underline ml-2 self-center">企業サイト</a>' : '') +
+    '</div></div>' +
+    /* Trends */
+    (c.trends ? '<div class="mt-4 bg-indigo-50 rounded-lg p-4"><p class="text-xs font-semibold text-indigo-700 mb-2">業界トレンド</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.trends) + '</p></div>' : '') +
+    /* Challenges */
+    (c.challenges ? '<div class="bg-orange-50 rounded-lg p-4"><p class="text-xs font-semibold text-orange-700 mb-2">想定課題</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.challenges) + '</p></div>' : '') +
+    /* Similar */
+    (c.similar ? '<div class="bg-green-50 rounded-lg p-4"><p class="text-xs font-semibold text-green-700 mb-2">類似企業</p><p class="text-xs text-slate-700 whitespace-pre-wrap">' + esc(c.similar) + '</p></div>' : '') +
+    /* Dup alert */
+    (c.dupAlert ? '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded"><p class="text-xs font-bold text-yellow-800">重複アラート</p><p class="text-xs text-yellow-700">' + esc(c.dupAlert) + '</p></div>' : '') +
+    /* Notes */
+    '<div class="mt-4 bg-slate-50 rounded-lg p-4">' +
+      '<p class="text-xs font-semibold text-slate-500 mb-2">備考</p>' +
+      '<textarea id="detail-notes" rows="3" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white" placeholder="備考を入力...">' + esc(c.notes) + '</textarea>' +
+      '<div class="flex justify-end mt-2"><button onclick="saveNotes(' + c.rowIndex + ')" class="bg-slate-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700">備考を保存</button></div>' +
+    '</div>' +
+    /* Edit button */
+    '<div class="flex gap-2 mt-4"><button onclick="startInlineEdit(' + idx + ')" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">編集</button>' +
+    '<button onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">閉じる</button></div>';
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function startInlineEdit(idx) {
+  const c = filteredCustomers[idx];
+  if (!c) return;
+  const body = document.getElementById('modal-body');
+  body.innerHTML =
+    '<form onsubmit="saveEdit(event,' + c.rowIndex + ')" class="space-y-3">' +
+    editField('会社名', 'edit-company', c.companyName) +
+    editField('氏名', 'edit-name', c.fullName) +
+    editField('役職', 'edit-title', c.title) +
+    editField('メール', 'edit-email', c.email) +
+    editField('電話', 'edit-phone', c.phone) +
+    editField('住所', 'edit-address', c.address) +
+    editField('Webサイト', 'edit-website', c.website) +
+    editField('担当者', 'edit-staff', c.staffName) +
+    '<div><label class="text-xs text-slate-500">備考</label><textarea id="edit-notes" rows="3" class="w-full border rounded px-3 py-1.5 text-sm mt-1">' + esc(c.notes) + '</textarea></div>' +
+    '<div class="flex gap-2"><button type="submit" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">保存</button><button type="button" onclick="closeModal()" class="bg-slate-200 text-slate-700 text-sm px-4 py-2 rounded-lg hover:bg-slate-300">キャンセル</button></div>' +
+    '</form>';
+}
+
+function saveEdit(e, rowIndex) {
+  e.preventDefault();
+  const updates = {
+    companyName: document.getElementById('edit-company').value,
+    fullName:    document.getElementById('edit-name').value,
+    title:       document.getElementById('edit-title').value,
+    email:       document.getElementById('edit-email').value,
+    phone:       document.getElementById('edit-phone').value,
+    address:     document.getElementById('edit-address').value,
+    website:     document.getElementById('edit-website').value,
+    staffName:   document.getElementById('edit-staff').value,
+    notes:       document.getElementById('edit-notes').value,
+  };
+  google.script.run.withSuccessHandler(() => { closeModal(); loadCustomers(); }).withFailureHandler(err => alert('保存に失敗しました: ' + err.message)).api_updateCustomer(rowIndex, updates);
+}
+
+function saveNotes(rowIndex) {
+  const notes = document.getElementById('detail-notes').value;
+  google.script.run.withSuccessHandler(() => {
+    // ローカルデータも更新
+    const c = allCustomers.find(c => c.rowIndex === rowIndex);
+    if (c) c.notes = notes;
+    alert('備考を保存しました');
+  }).withFailureHandler(err => alert('保存に失敗しました: ' + err.message)).api_updateCustomer(rowIndex, { notes: notes });
+}
+
+function confirmDelete(rowIndex) {
+  if (!confirm('この顧客を削除しますか？この操作は取り消せません。')) return;
+  google.script.run.withSuccessHandler(() => loadCustomers()).withFailureHandler(err => alert(err.message)).api_deleteCustomer(rowIndex);
+}
+
+function closeModal() { document.getElementById('detail-modal').classList.remove('open'); }
+
+/* ==========================================
+   3. CARD SCAN
+   ========================================== */
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btn-merge').className = mode === 'merge' ? 'p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm' : 'p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50';
+  document.getElementById('btn-multi').className = mode === 'multi' ? 'p-3 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-bold text-center text-sm' : 'p-3 border-2 border-slate-200 text-slate-500 rounded-lg text-center text-sm hover:bg-slate-50';
+}
+
+function handleFileSelect(input) {
+  if (input.files && input.files.length) { selectedFiles = selectedFiles.concat(Array.from(input.files)); updatePreview(); input.value = ''; }
+}
+
+function updatePreview() {
+  const ph = document.getElementById('upload-placeholder'), pa = document.getElementById('preview-area');
+  pa.innerHTML = '';
+  if (selectedFiles.length) {
+    ph.classList.add('hidden'); pa.classList.remove('hidden');
+    selectedFiles.forEach((f, i) => {
+      const r = new FileReader();
+      r.onload = e => {
+        const d = document.createElement('div'); d.className = 'relative pointer-events-auto';
+        const img = document.createElement('img'); img.src = e.target.result; img.className = 'w-full h-20 object-cover rounded-lg border';
+        const btn = document.createElement('button'); btn.innerHTML = '&times;'; btn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow'; btn.onclick = ev => { ev.preventDefault(); selectedFiles.splice(i, 1); updatePreview(); };
+        d.appendChild(img); d.appendChild(btn); pa.appendChild(d);
+      }; r.readAsDataURL(f);
+    });
+  } else { ph.classList.remove('hidden'); pa.classList.add('hidden'); }
+}
+
+async function uploadAndAnalyze() {
+  if (!selectedFiles.length) { alert('画像を選択してください'); return; }
+  if (currentMode === 'merge' && selectedFiles.length !== 2 && !confirm('表裏統合モードでは2枚の画像が必要です（現在 ' + selectedFiles.length + ' 枚）。続行しますか？')) return;
+  document.getElementById('submitBtn').disabled = true;
+  showScanStatus('画像を圧縮中...');
+  try {
+    const imgs = await Promise.all(selectedFiles.map(processFile));
+    showScanStatus('AIが解析中...');
+    google.script.run.withSuccessHandler(onScanSuccess).withFailureHandler(onScanFail).analyzeFromWeb({ mode: currentMode, images: imgs, staffName: document.getElementById('staffNameInput').value.trim() });
+  } catch (e) { onScanFail(e); }
+}
+
+function processFile(file) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'), ctx = c.getContext('2d');
+        let w = img.width, h = img.height; if (w > 1600) { h *= 1600/w; w = 1600; }
+        c.width = w; c.height = h; ctx.drawImage(img, 0, 0, w, h);
+        resolve({ mimeType: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.8).split(',')[1] });
+      }; img.src = e.target.result;
+    }; r.readAsDataURL(file);
+  });
+}
+
+function showScanStatus(t) { document.getElementById('scan-status').classList.remove('hidden'); document.getElementById('scan-status-text').textContent = t; }
+function hideScanStatus()  { document.getElementById('scan-status').classList.add('hidden'); }
+
+function onScanSuccess(res) {
+  document.getElementById('submitBtn').disabled = false;
+  hideScanStatus();
+  const el = document.getElementById('scan-result');
+  el.classList.remove('hidden');
+  el.innerHTML = '<p class="text-green-600 font-semibold text-sm">' + res.count + ' 件をスプレッドシートに保存しました</p>' +
+    res.data.map(d => '<div class="bg-white rounded-lg border p-4 space-y-2">' +
+      '<p class="font-bold">' + esc(d.companyName) + '</p>' +
+      '<p class="text-sm text-slate-600">' + esc(d.fullName) + (d.email ? ' / ' + esc(d.email) : '') + '</p>' +
+      (d.duplicateAlert ? '<div class="text-xs bg-yellow-50 border-l-2 border-yellow-400 p-2 rounded">' + esc(d.duplicateAlert) + '</div>' : '') +
+      (d.industry ? '<span class="badge badge-blue">' + esc(d.industry) + '</span>' : '') +
+      (d.similarCompanies ? '<p class="text-xs text-slate-500">' + esc(d.similarCompanies) + '</p>' : '') +
+    '</div>').join('');
+  // Refresh customer data
+  allCustomers = [];
+}
+
+function onScanFail(e) { document.getElementById('submitBtn').disabled = false; hideScanStatus(); alert('エラー: ' + (e.message || e)); }
+
+/* ==========================================
+   4. DORMANT
+   ========================================== */
+function loadDormant() { loadDormantList(); loadDormantDrafts(); }
+
+function switchDormantTab(tab) {
+  document.getElementById('dormant-panel-list').classList.toggle('hidden', tab !== 'list');
+  document.getElementById('dormant-panel-drafts').classList.toggle('hidden', tab !== 'drafts');
+  document.querySelectorAll('#page-dormant .sub-tab').forEach((t, i) => t.classList.toggle('active', (i===0 && tab==='list') || (i===1 && tab==='drafts')));
+}
+
+function loadDormantList() {
+  document.getElementById('dormant-loading').style.display = '';
+  document.getElementById('dormant-table').style.display = 'none';
+  google.script.run.withSuccessHandler(data => {
+    const now = new Date();
+    const rows = data.filter(c => {
+      if (!c.lastContact) return false;
+      return Math.floor((now - new Date(c.lastContact)) / 864e5) >= 180;
+    }).map(c => { const d = Math.floor((now - new Date(c.lastContact)) / 864e5); return {...c, dormantDays: d}; })
+    .sort((a,b) => b.dormantDays - a.dormantDays);
+    const tbody = document.getElementById('dormant-tbody');
+    tbody.innerHTML = rows.length ? rows.map(c =>
+      '<tr><td class="font-semibold">' + esc(c.companyName) + '</td><td>' + esc(c.fullName) + '</td><td>' + esc(c.email) + '</td><td>' + fmtDate(c.lastContact) + '</td><td><span class="badge badge-red">' + c.dormantDays + 'd</span></td><td>' + esc(c.industry) + '</td><td>' + esc(c.staffName) + '</td></tr>'
+    ).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">休眠顧客は見つかりませんでした</td></tr>';
+    document.getElementById('dormant-loading').style.display = 'none';
+    document.getElementById('dormant-table').style.display = '';
+  }).api_getAllCustomers();
+}
+
+function loadDormantDrafts() {
+  document.getElementById('drafts-loading').style.display = '';
+  google.script.run.withSuccessHandler(data => {
+    document.getElementById('drafts-loading').style.display = 'none';
+    const el = document.getElementById('drafts-list');
+    el.innerHTML = data.length ? data.map(d =>
+      '<div class="bg-white rounded-lg border p-4 space-y-2">' +
+        '<div class="flex justify-between items-start"><div><p class="font-semibold text-sm">' + esc(d.companyName) + ' - ' + esc(d.fullName) + '</p><p class="text-xs text-slate-400">' + fmtDate(d.generatedDate) + ' | 休眠 ' + d.dormantDays + ' 日</p></div><span class="badge ' + (d.status==='sent' ? 'badge-green' : 'badge-yellow') + '">' + (d.status==='sent' ? '送信済み' : d.status==='下書き' ? '下書き' : esc(d.status)) + '</span></div>' +
+        '<p class="text-xs font-semibold text-slate-700">件名: ' + esc(d.subject) + '</p>' +
+        '<p class="text-xs text-slate-600 whitespace-pre-wrap bg-slate-50 p-3 rounded">' + esc(d.body) + '</p>' +
+      '</div>'
+    ).join('') : '<p class="text-center text-slate-400 py-8">下書きはまだありません。「メール下書き生成」をクリックして作成してください。</p>';
+  }).api_getDormantDrafts();
+}
+
+function runDormantCheck() {
+  const btn = document.getElementById('btn-run-dormant');
+  btn.disabled = true; btn.textContent = '処理中...';
+  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = 'メール下書き生成'; alert(r.processed + ' 件の顧客を処理しました'); loadDormant(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = 'メール下書き生成'; alert(e.message); }).api_runDormantCheck();
+}
+
+/* ==========================================
+   5. TARGETS
+   ========================================== */
+function loadTargets() {
+  document.getElementById('targets-loading').style.display = '';
+  document.getElementById('targets-table').style.display = 'none';
+  google.script.run.withSuccessHandler(data => {
+    const tbody = document.getElementById('targets-tbody');
+    tbody.innerHTML = data.length ? data.map((c, idx) => {
+      const pCls = c.priority === 'High' || c.priority === '\u9AD8' ? 'badge-red' : c.priority === 'Medium' || c.priority === '\u4E2D' ? 'badge-yellow' : 'badge-gray';
+      return '<tr><td class="font-semibold">' + esc(c.baseCompany) + '</td><td>' + esc(c.similarName) + '</td><td><span class="badge badge-blue">' + esc(c.industry) + '</span></td><td class="text-xs">' + esc(c.reason) + '</td><td><span class="badge ' + pCls + '">' + esc(c.priority) + '</span></td><td>' + (c.estimatedUrl ? '<a href="' + esc(c.estimatedUrl) + '" target="_blank" class="text-blue-500 hover:underline text-xs">開く</a>' : '-') + '</td><td class="text-xs">' + fmtDate(c.generatedDate) + '</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="text-center py-8 text-slate-400">ターゲットデータがありません。「一括分析実行」をクリックしてください。</td></tr>';
+    document.getElementById('targets-loading').style.display = 'none';
+    document.getElementById('targets-table').style.display = '';
+  }).api_getSimilarCompanies();
+}
+
+function runBatchSimilar() {
+  const btn = document.getElementById('btn-run-similar');
+  btn.disabled = true; btn.textContent = '分析中...';
+  google.script.run.withSuccessHandler(r => { btn.disabled = false; btn.textContent = '一括分析実行'; alert(r.processed + '/' + r.total + ' 件を処理しました'); loadTargets(); }).withFailureHandler(e => { btn.disabled = false; btn.textContent = '一括分析実行'; alert(e.message); }).api_runBatchSimilar();
+}
+
+/* ==========================================
+   SETUP
+   ========================================== */
+function runSetup() {
+  if (!confirm('初期セットアップを実行しますか？シートとヘッダーが作成されます。')) return;
+  google.script.run.withSuccessHandler(() => alert('セットアップが完了しました')).withFailureHandler(e => alert(e.message)).setupSFA();
+}
+
+/* ==========================================
+   UTILS
+   ========================================== */
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function fmtDate(s) { if (!s) return '-'; try { const d = new Date(s); return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0'); } catch(e) { return '-'; } }
+function daysSince(s) { if (!s) return null; const d = new Date(s); if (isNaN(d)) return null; return Math.floor((new Date() - d) / 864e5); }
+function field(label, val, href) { return '<div><p class="text-xs text-slate-400">' + label + '</p>' + (href && val ? '<a href="' + esc(href) + '" target="_blank" class="text-blue-600 hover:underline">' + esc(val) + '</a>' : '<p class="font-medium">' + (esc(val) || '-') + '</p>') + '</div>'; }
+function editField(label, id, val) { return '<div><label class="text-xs text-slate-500">' + label + '</label><input id="' + id + '" value="' + esc(val) + '" class="w-full border rounded px-3 py-1.5 text-sm mt-1"></div>'; }
+function snsLink(label, url, bg, fg) { return url ? '<a href="' + esc(url) + '" target="_blank" style="background:' + bg + ';color:' + fg + '">' + label + '</a>' : ''; }
+
+/* ==========================================
+   6. SETTINGS
+   ========================================== */
+function loadSettings() {
+  // 認証ステータス確認
+  google.script.run.withSuccessHandler(authorized => {
+    const badge = document.getElementById('ms-auth-status');
+    const btnAuth = document.getElementById('btn-ms-auth');
+    const btnLogout = document.getElementById('btn-ms-logout');
+    if (authorized) {
+      badge.textContent = '認証済み';
+      badge.className = 'badge badge-green';
+      btnAuth.style.display = 'none';
+      btnLogout.style.display = '';
+    } else {
+      badge.textContent = '未認証';
+      badge.className = 'badge badge-red';
+      btnAuth.style.display = '';
+      btnLogout.style.display = 'none';
+    }
+  }).withFailureHandler(() => {
+    document.getElementById('ms-auth-status').textContent = '確認失敗';
+    document.getElementById('ms-auth-status').className = 'badge badge-gray';
+  }).api_isMicrosoftAuthorized();
+
+  // メールプロバイダー設定
+  google.script.run.withSuccessHandler(provider => {
+    const labels = { gmail: 'Gmail', outlook: 'Outlook', both: 'Gmail + Outlook' };
+    document.getElementById('email-provider-display').textContent = labels[provider] || provider;
+  }).withFailureHandler(() => {}).api_getEmailProvider();
+}
+
+function startMicrosoftAuth() {
+  google.script.run.withSuccessHandler(url => {
+    window.open(url, '_blank', 'width=500,height=600');
+    // 認証後にステータスを再チェック
+    setTimeout(() => loadSettings(), 10000);
+  }).withFailureHandler(e => alert('認証URL取得に失敗しました: ' + e.message)).api_getMicrosoftAuthUrl();
+}
+
+function microsoftLogout() {
+  if (!confirm('Microsoft 認証を解除しますか？')) return;
+  google.script.run.withSuccessHandler(() => {
+    alert('認証を解除しました');
+    loadSettings();
+  }).withFailureHandler(e => alert(e.message)).api_microsoftLogout();
+}
+
+function runOutlookSync() {
+  const btn = document.getElementById('btn-outlook-sync');
+  const resultEl = document.getElementById('outlook-sync-result');
+  btn.disabled = true; btn.textContent = '同期中...';
+  resultEl.classList.add('hidden');
+  google.script.run.withSuccessHandler(r => {
+    btn.disabled = false; btn.textContent = '手動同期を実行';
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = '更新: <strong>' + r.updated + '</strong> 件 / エラー: <strong>' + r.errors + '</strong> 件 / 対象: ' + r.total + ' 件';
+  }).withFailureHandler(e => {
+    btn.disabled = false; btn.textContent = '手動同期を実行';
+    alert('同期に失敗しました: ' + e.message);
+  }).api_syncOutlookContacts();
+}
+
+/* ── INIT ── */
+navigate('dashboard');
+</script>
+</body>
+</html>

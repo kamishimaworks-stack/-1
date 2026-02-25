@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "{{MICROSOFT-APP-ID}}",
+  "developer": {
+    "name": "SFA Manager",
+    "websiteUrl": "https://script.google.com",
+    "privacyUrl": "https://script.google.com",
+    "termsOfUseUrl": "https://script.google.com"
+  },
+  "name": {
+    "short": "SFA Manager",
+    "full": "SFA Manager - Business Card CRM"
+  },
+  "description": {
+    "short": "Business card CRM and SFA tool",
+    "full": "SFA Manager provides business card scanning, customer management, dormant customer revival, and similar company analysis."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#2563EB",
+  "staticTabs": [
+    {
+      "entityId": "sfa-main",
+      "name": "SFA Manager",
+      "contentUrl": "https://script.google.com/macros/s/{{DEPLOYMENT-ID}}/exec",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "script.google.com",
+    "*.google.com"
+  ]
+}
